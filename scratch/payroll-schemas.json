@@ -1,0 +1,1655 @@
+{
+  "BulkStorePayrollRunRequest": {
+    "required": [
+      "month",
+      "year"
+    ],
+    "properties": {
+      "company_id": {
+        "type": "integer",
+        "nullable": true
+      },
+      "employee_ids": {
+        "description": "If omitted, all active employees in scope are processed.",
+        "type": "array",
+        "items": {
+          "type": "integer"
+        },
+        "nullable": true
+      },
+      "month": {
+        "type": "integer",
+        "maximum": 12,
+        "minimum": 1
+      },
+      "year": {
+        "type": "integer"
+      },
+      "include_overtime": {
+        "description": "Auto-calculate overtime from attendance. Default true.",
+        "type": "boolean",
+        "nullable": true
+      },
+      "employee_overtime": {
+        "type": "array",
+        "items": {
+          "properties": {
+            "employee_id": {
+              "type": "integer"
+            },
+            "include_overtime": {
+              "type": "boolean"
+            }
+          },
+          "type": "object"
+        },
+        "nullable": true
+      },
+      "remarks": {
+        "type": "string",
+        "nullable": true
+      }
+    },
+    "type": "object"
+  },
+  "FinalizePayrollRunsRequest": {
+    "required": [
+      "month",
+      "year"
+    ],
+    "properties": {
+      "month": {
+        "type": "integer"
+      },
+      "year": {
+        "type": "integer"
+      },
+      "payroll_run_ids": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        },
+        "nullable": true
+      },
+      "employee_ids": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        },
+        "nullable": true
+      },
+      "calculation_mode": {
+        "type": "string",
+        "nullable": true,
+        "enum": [
+          "hour",
+          "day"
+        ]
+      },
+      "include_overtime": {
+        "type": "boolean",
+        "nullable": true
+      },
+      "include_penalty": {
+        "type": "boolean",
+        "nullable": true
+      }
+    },
+    "type": "object"
+  },
+  "IndexEmployeeSalaryQuery": {
+    "properties": {
+      "q": {
+        "description": "Search by name, code, email, or mobile.",
+        "type": "string",
+        "nullable": true
+      },
+      "department_id": {
+        "type": "integer",
+        "nullable": true
+      },
+      "branch_id": {
+        "type": "integer",
+        "nullable": true
+      },
+      "status": {
+        "type": "string",
+        "nullable": true,
+        "enum": [
+          "active",
+          "inactive",
+          "on_leave"
+        ]
+      },
+      "company_id": {
+        "description": "Group Admin only.",
+        "type": "integer",
+        "nullable": true
+      },
+      "page": {
+        "type": "integer",
+        "nullable": true,
+        "minimum": 1
+      },
+      "per_page": {
+        "type": "integer",
+        "nullable": true,
+        "maximum": 100,
+        "minimum": 1
+      }
+    },
+    "type": "object"
+  },
+  "IndexPayrollRunQuery": {
+    "properties": {
+      "month": {
+        "type": "integer",
+        "nullable": true,
+        "maximum": 12,
+        "minimum": 1
+      },
+      "year": {
+        "type": "integer",
+        "nullable": true
+      },
+      "employee_id": {
+        "type": "integer",
+        "nullable": true
+      },
+      "company_id": {
+        "description": "Group Admin only.",
+        "type": "integer",
+        "nullable": true
+      },
+      "status": {
+        "type": "string",
+        "nullable": true,
+        "enum": [
+          "draft",
+          "processed",
+          "paid"
+        ]
+      },
+      "department_id": {
+        "type": "integer",
+        "nullable": true
+      },
+      "page": {
+        "type": "integer",
+        "nullable": true,
+        "minimum": 1
+      },
+      "per_page": {
+        "type": "integer",
+        "nullable": true,
+        "maximum": 100,
+        "minimum": 1
+      }
+    },
+    "type": "object"
+  },
+  "IndexSalaryComponentQuery": {
+    "properties": {
+      "q": {
+        "type": "string",
+        "nullable": true
+      },
+      "type": {
+        "type": "string",
+        "nullable": true,
+        "enum": [
+          "earning",
+          "deduction"
+        ]
+      },
+      "status": {
+        "type": "string",
+        "nullable": true,
+        "enum": [
+          "active",
+          "inactive"
+        ]
+      },
+      "company_id": {
+        "description": "Group Admin only.",
+        "type": "integer",
+        "nullable": true
+      },
+      "page": {
+        "type": "integer",
+        "nullable": true,
+        "minimum": 1
+      },
+      "per_page": {
+        "type": "integer",
+        "nullable": true,
+        "maximum": 100,
+        "minimum": 1
+      }
+    },
+    "type": "object"
+  },
+  "IndexSalaryStructureQuery": {
+    "properties": {
+      "employee_id": {
+        "type": "integer",
+        "nullable": true
+      },
+      "status": {
+        "type": "string",
+        "nullable": true,
+        "enum": [
+          "active",
+          "inactive"
+        ]
+      },
+      "company_id": {
+        "description": "Group Admin only.",
+        "type": "integer",
+        "nullable": true
+      },
+      "page": {
+        "type": "integer",
+        "nullable": true,
+        "minimum": 1
+      },
+      "per_page": {
+        "type": "integer",
+        "nullable": true,
+        "maximum": 100,
+        "minimum": 1
+      }
+    },
+    "type": "object"
+  },
+  "MySalaryQuery": {
+    "required": [
+      "month",
+      "year"
+    ],
+    "properties": {
+      "month": {
+        "type": "integer",
+        "example": 6,
+        "maximum": 12,
+        "minimum": 1
+      },
+      "year": {
+        "type": "integer",
+        "example": 2026,
+        "maximum": 2100,
+        "minimum": 2000
+      },
+      "employee_id": {
+        "description": "Optional. Admins, HR, and managers may query another employee. Employees may only view their own record.",
+        "type": "integer",
+        "nullable": true
+      }
+    },
+    "type": "object"
+  },
+  "PayrollRunFlowQuery": {
+    "required": [
+      "step"
+    ],
+    "properties": {
+      "step": {
+        "description": "1=Attendance, 2=Salary, 3=Process, 4=Save Payment",
+        "type": "integer",
+        "enum": [
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "month": {
+        "type": "integer",
+        "nullable": true
+      },
+      "year": {
+        "type": "integer",
+        "nullable": true
+      },
+      "company_id": {
+        "type": "integer",
+        "nullable": true
+      },
+      "branch_id": {
+        "type": "integer",
+        "nullable": true
+      },
+      "department_id": {
+        "type": "integer",
+        "nullable": true
+      },
+      "q": {
+        "type": "string",
+        "nullable": true
+      },
+      "include_inactive": {
+        "type": "boolean",
+        "nullable": true
+      },
+      "selected_ids": {
+        "description": "Comma-separated employee IDs",
+        "type": "string",
+        "nullable": true
+      },
+      "calculation_mode": {
+        "type": "string",
+        "nullable": true,
+        "enum": [
+          "hour",
+          "day"
+        ]
+      },
+      "include_overtime": {
+        "type": "boolean",
+        "nullable": true
+      },
+      "include_penalty": {
+        "type": "boolean",
+        "nullable": true
+      },
+      "page": {
+        "type": "integer",
+        "nullable": true
+      },
+      "per_page": {
+        "type": "integer",
+        "nullable": true
+      }
+    },
+    "type": "object"
+  },
+  "PayrollWorkspaceQuery": {
+    "required": [
+      "screen"
+    ],
+    "properties": {
+      "screen": {
+        "type": "string",
+        "enum": [
+          "summary",
+          "run",
+          "all"
+        ]
+      },
+      "month": {
+        "type": "integer",
+        "nullable": true
+      },
+      "year": {
+        "type": "integer",
+        "nullable": true
+      },
+      "company_id": {
+        "type": "integer",
+        "nullable": true
+      },
+      "branch_id": {
+        "type": "integer",
+        "nullable": true
+      },
+      "department_id": {
+        "type": "integer",
+        "nullable": true
+      },
+      "designation_id": {
+        "type": "integer",
+        "nullable": true
+      },
+      "employment_type": {
+        "type": "string",
+        "nullable": true
+      },
+      "employee_status": {
+        "type": "string",
+        "nullable": true
+      },
+      "calculation_mode": {
+        "type": "string",
+        "nullable": true,
+        "enum": [
+          "hour",
+          "day"
+        ]
+      },
+      "salary_type": {
+        "type": "string",
+        "nullable": true,
+        "enum": [
+          "monthly",
+          "hourly"
+        ]
+      },
+      "include_inactive": {
+        "type": "boolean",
+        "nullable": true
+      },
+      "q": {
+        "type": "string",
+        "nullable": true
+      },
+      "payroll_status": {
+        "type": "string",
+        "nullable": true
+      },
+      "page": {
+        "type": "integer",
+        "nullable": true
+      },
+      "per_page": {
+        "type": "integer",
+        "nullable": true
+      }
+    },
+    "type": "object"
+  },
+  "SavePayrollPaymentsRequest": {
+    "required": [
+      "month",
+      "year",
+      "payments"
+    ],
+    "properties": {
+      "month": {
+        "type": "integer"
+      },
+      "year": {
+        "type": "integer"
+      },
+      "payments": {
+        "type": "array",
+        "items": {
+          "required": [
+            "payroll_run_id",
+            "paid_amount"
+          ],
+          "properties": {
+            "payroll_run_id": {
+              "type": "integer"
+            },
+            "paid_amount": {
+              "type": "number"
+            },
+            "full_payment": {
+              "type": "boolean",
+              "nullable": true
+            }
+          },
+          "type": "object"
+        }
+      }
+    },
+    "type": "object"
+  },
+  "ShowEmployeeSalarySlipQuery": {
+    "required": [
+      "employee_id",
+      "month",
+      "year"
+    ],
+    "properties": {
+      "employee_id": {
+        "description": "Employee ID",
+        "type": "integer"
+      },
+      "month": {
+        "type": "integer",
+        "maximum": 12,
+        "minimum": 1
+      },
+      "year": {
+        "type": "integer",
+        "maximum": 2100,
+        "minimum": 2000
+      }
+    },
+    "type": "object"
+  },
+  "StorePayrollRunRequest": {
+    "required": [
+      "employee_id",
+      "month",
+      "year"
+    ],
+    "properties": {
+      "employee_id": {
+        "type": "integer"
+      },
+      "month": {
+        "type": "integer",
+        "maximum": 12,
+        "minimum": 1
+      },
+      "year": {
+        "type": "integer"
+      },
+      "salary_structure_id": {
+        "type": "integer",
+        "nullable": true
+      },
+      "lop_days": {
+        "type": "number",
+        "format": "float",
+        "nullable": true
+      },
+      "lop_amount": {
+        "description": "Override; if omitted with lop_days, derived from basic salary / 30.",
+        "type": "number",
+        "format": "float",
+        "nullable": true
+      },
+      "include_overtime": {
+        "description": "Auto-calculate overtime from attendance. Default true.",
+        "type": "boolean",
+        "nullable": true
+      },
+      "remarks": {
+        "type": "string",
+        "nullable": true
+      }
+    },
+    "type": "object"
+  },
+  "StoreSalaryComponentRequest": {
+    "required": [
+      "name",
+      "code",
+      "type"
+    ],
+    "properties": {
+      "company_id": {
+        "description": "Required for Group Admin.",
+        "type": "integer",
+        "nullable": true
+      },
+      "name": {
+        "type": "string"
+      },
+      "code": {
+        "type": "string"
+      },
+      "type": {
+        "type": "string",
+        "enum": [
+          "earning",
+          "deduction"
+        ]
+      },
+      "default_amount": {
+        "type": "number",
+        "format": "float",
+        "nullable": true
+      },
+      "status": {
+        "type": "string",
+        "nullable": true,
+        "enum": [
+          "active",
+          "inactive"
+        ]
+      }
+    },
+    "type": "object"
+  },
+  "StoreSalaryStructureRequest": {
+    "required": [
+      "employee_id",
+      "basic_salary",
+      "effective_from"
+    ],
+    "properties": {
+      "employee_id": {
+        "type": "integer"
+      },
+      "basic_salary": {
+        "type": "number",
+        "format": "float"
+      },
+      "gross_salary": {
+        "type": "number",
+        "format": "float",
+        "nullable": true
+      },
+      "effective_from": {
+        "type": "string",
+        "format": "date"
+      },
+      "status": {
+        "type": "string",
+        "nullable": true,
+        "enum": [
+          "active",
+          "inactive"
+        ]
+      },
+      "items": {
+        "type": "array",
+        "items": {
+          "properties": {
+            "salary_component_id": {
+              "type": "integer"
+            },
+            "amount": {
+              "type": "number",
+              "format": "float"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "earning",
+                "deduction"
+              ]
+            }
+          },
+          "type": "object"
+        }
+      }
+    },
+    "type": "object"
+  },
+  "UpdateSalaryComponentRequest": {
+    "required": [
+      "name",
+      "code",
+      "type",
+      "status"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "code": {
+        "type": "string"
+      },
+      "type": {
+        "type": "string",
+        "enum": [
+          "earning",
+          "deduction"
+        ]
+      },
+      "default_amount": {
+        "type": "number",
+        "format": "float",
+        "nullable": true
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "active",
+          "inactive"
+        ]
+      }
+    },
+    "type": "object"
+  },
+  "UpdateSalaryStructureRequest": {
+    "required": [
+      "basic_salary",
+      "effective_from",
+      "status"
+    ],
+    "properties": {
+      "basic_salary": {
+        "type": "number",
+        "format": "float"
+      },
+      "gross_salary": {
+        "type": "number",
+        "format": "float",
+        "nullable": true
+      },
+      "effective_from": {
+        "type": "string",
+        "format": "date"
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "active",
+          "inactive"
+        ]
+      },
+      "items": {
+        "type": "array",
+        "items": {
+          "properties": {
+            "salary_component_id": {
+              "type": "integer"
+            },
+            "amount": {
+              "type": "number",
+              "format": "float"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "earning",
+                "deduction"
+              ]
+            }
+          },
+          "type": "object"
+        },
+        "nullable": true
+      }
+    },
+    "type": "object"
+  },
+  "EmployeeSalaryList": {
+    "properties": {
+      "id": {
+        "type": "integer"
+      },
+      "employee_code": {
+        "type": "string"
+      },
+      "full_name": {
+        "type": "string"
+      },
+      "email": {
+        "type": "string",
+        "format": "email"
+      },
+      "mobile": {
+        "type": "string"
+      },
+      "department": {
+        "type": "object",
+        "nullable": true
+      },
+      "designation": {
+        "type": "object",
+        "nullable": true
+      },
+      "branch": {
+        "type": "object",
+        "nullable": true
+      },
+      "status": {
+        "type": "string"
+      },
+      "salary_detail": {
+        "properties": {
+          "basic_salary": {
+            "type": "number",
+            "format": "float",
+            "nullable": true
+          },
+          "hra": {
+            "type": "number",
+            "format": "float",
+            "nullable": true
+          },
+          "allowances": {
+            "type": "number",
+            "format": "float",
+            "nullable": true
+          },
+          "deductions": {
+            "type": "number",
+            "format": "float",
+            "nullable": true
+          },
+          "net_salary": {
+            "type": "number",
+            "format": "float",
+            "nullable": true
+          },
+          "pf_applicable": {
+            "type": "boolean"
+          },
+          "esi_applicable": {
+            "type": "boolean"
+          },
+          "tds_applicable": {
+            "type": "boolean"
+          }
+        },
+        "type": "object",
+        "nullable": true
+      },
+      "joining_date": {
+        "type": "string",
+        "format": "date",
+        "nullable": true
+      }
+    },
+    "type": "object"
+  },
+  "EmployeeSalaryStructure": {
+    "properties": {
+      "id": {
+        "type": "integer"
+      },
+      "tenant_id": {
+        "type": "integer"
+      },
+      "company_id": {
+        "type": "integer"
+      },
+      "employee_id": {
+        "type": "integer"
+      },
+      "basic_salary": {
+        "type": "number",
+        "format": "float"
+      },
+      "gross_salary": {
+        "type": "number",
+        "format": "float",
+        "nullable": true
+      },
+      "effective_from": {
+        "type": "string",
+        "format": "date"
+      },
+      "status": {
+        "type": "string"
+      },
+      "items": {
+        "type": "array",
+        "items": {
+          "properties": {
+            "id": {
+              "type": "integer"
+            },
+            "salary_component_id": {
+              "type": "integer"
+            },
+            "amount": {
+              "type": "number",
+              "format": "float"
+            },
+            "type": {
+              "type": "string"
+            },
+            "component": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/SalaryComponent"
+                }
+              ],
+              "nullable": true
+            }
+          },
+          "type": "object"
+        }
+      },
+      "created_at": {
+        "type": "string",
+        "format": "date-time",
+        "nullable": true
+      },
+      "updated_at": {
+        "type": "string",
+        "format": "date-time",
+        "nullable": true
+      }
+    },
+    "type": "object"
+  },
+  "PayrollRun": {
+    "properties": {
+      "id": {
+        "type": "integer"
+      },
+      "tenant_id": {
+        "type": "integer"
+      },
+      "company_id": {
+        "type": "integer"
+      },
+      "month": {
+        "type": "integer"
+      },
+      "year": {
+        "type": "integer"
+      },
+      "employee_id": {
+        "type": "integer"
+      },
+      "salary_structure_id": {
+        "type": "integer",
+        "nullable": true
+      },
+      "gross_salary": {
+        "type": "number",
+        "format": "float"
+      },
+      "total_earnings": {
+        "type": "number",
+        "format": "float"
+      },
+      "total_deductions": {
+        "type": "number",
+        "format": "float"
+      },
+      "lop_days": {
+        "type": "number",
+        "format": "float"
+      },
+      "lop_amount": {
+        "type": "number",
+        "format": "float"
+      },
+      "overtime_hours": {
+        "type": "number",
+        "format": "float"
+      },
+      "overtime_amount": {
+        "type": "number",
+        "format": "float"
+      },
+      "net_salary": {
+        "type": "number",
+        "format": "float"
+      },
+      "paid_amount": {
+        "type": "number",
+        "format": "float"
+      },
+      "ot_allowed": {
+        "type": "boolean"
+      },
+      "hold_reason": {
+        "type": "string",
+        "nullable": true
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "processed",
+          "paid",
+          "hold"
+        ]
+      },
+      "processed_at": {
+        "type": "string",
+        "format": "date-time",
+        "nullable": true
+      },
+      "processed_by": {
+        "type": "integer",
+        "nullable": true
+      },
+      "paid_at": {
+        "type": "string",
+        "format": "date-time",
+        "nullable": true
+      },
+      "remarks": {
+        "type": "string",
+        "nullable": true
+      },
+      "items": {
+        "type": "array",
+        "items": {
+          "properties": {
+            "id": {
+              "type": "integer"
+            },
+            "salary_component_id": {
+              "type": "integer",
+              "nullable": true
+            },
+            "component_name": {
+              "type": "string"
+            },
+            "component_code": {
+              "type": "string",
+              "nullable": true
+            },
+            "type": {
+              "type": "string"
+            },
+            "amount": {
+              "type": "number",
+              "format": "float"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "employee": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/Employee"
+          }
+        ],
+        "nullable": true
+      },
+      "processed_by_user": {
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "nullable": true
+      },
+      "created_at": {
+        "type": "string",
+        "format": "date-time",
+        "nullable": true
+      },
+      "updated_at": {
+        "type": "string",
+        "format": "date-time",
+        "nullable": true
+      }
+    },
+    "type": "object"
+  },
+  "SalaryComponent": {
+    "properties": {
+      "id": {
+        "type": "integer"
+      },
+      "tenant_id": {
+        "type": "integer"
+      },
+      "company_id": {
+        "type": "integer"
+      },
+      "name": {
+        "type": "string"
+      },
+      "code": {
+        "type": "string"
+      },
+      "type": {
+        "type": "string",
+        "enum": [
+          "earning",
+          "deduction"
+        ]
+      },
+      "default_amount": {
+        "type": "number",
+        "format": "float",
+        "nullable": true
+      },
+      "status": {
+        "type": "string"
+      },
+      "created_at": {
+        "type": "string",
+        "format": "date-time",
+        "nullable": true
+      },
+      "updated_at": {
+        "type": "string",
+        "format": "date-time",
+        "nullable": true
+      }
+    },
+    "type": "object"
+  },
+  "SalarySlip": {
+    "properties": {
+      "id": {
+        "type": "integer"
+      },
+      "month": {
+        "type": "integer"
+      },
+      "year": {
+        "type": "integer"
+      },
+      "employee": {
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "employee_code": {
+            "type": "string"
+          },
+          "full_name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "department": {
+            "type": "string",
+            "nullable": true
+          },
+          "designation": {
+            "type": "string",
+            "nullable": true
+          },
+          "branch": {
+            "type": "string",
+            "nullable": true
+          },
+          "joining_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "pan_no": {
+            "type": "string",
+            "nullable": true
+          },
+          "bank_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "account_number": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "type": "object",
+        "nullable": true
+      },
+      "company": {
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "nullable": true
+      },
+      "gross_salary": {
+        "type": "number",
+        "format": "float"
+      },
+      "total_earnings": {
+        "type": "number",
+        "format": "float"
+      },
+      "total_deductions": {
+        "type": "number",
+        "format": "float"
+      },
+      "lop_days": {
+        "type": "number",
+        "format": "float"
+      },
+      "lop_amount": {
+        "type": "number",
+        "format": "float"
+      },
+      "net_salary": {
+        "type": "number",
+        "format": "float"
+      },
+      "earnings": {
+        "type": "array",
+        "items": {
+          "properties": {
+            "component_name": {
+              "type": "string"
+            },
+            "component_code": {
+              "type": "string",
+              "nullable": true
+            },
+            "amount": {
+              "type": "number",
+              "format": "float"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "deductions": {
+        "type": "array",
+        "items": {
+          "properties": {
+            "component_name": {
+              "type": "string"
+            },
+            "component_code": {
+              "type": "string",
+              "nullable": true
+            },
+            "amount": {
+              "type": "number",
+              "format": "float"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "processed",
+          "paid"
+        ]
+      },
+      "processed_at": {
+        "type": "string",
+        "format": "date-time",
+        "nullable": true
+      },
+      "paid_at": {
+        "type": "string",
+        "format": "date-time",
+        "nullable": true
+      },
+      "remarks": {
+        "type": "string",
+        "nullable": true
+      }
+    },
+    "type": "object"
+  },
+  "EmployeeMonthlySummaryPayrollHints": {
+    "properties": {
+      "lop_days": {
+        "type": "number",
+        "format": "float",
+        "example": 1.5
+      },
+      "payable_days": {
+        "type": "number",
+        "format": "float",
+        "example": 28.5
+      },
+      "overtime_hours": {
+        "type": "number",
+        "format": "float",
+        "example": 4.5
+      },
+      "overtime_minutes": {
+        "type": "integer",
+        "example": 270
+      },
+      "elapsed_days": {
+        "type": "integer",
+        "example": 20
+      }
+    },
+    "type": "object"
+  },
+  "HourBasedSalaryDayRecord": {
+    "properties": {
+      "date": {
+        "type": "string",
+        "format": "date",
+        "example": "2026-06-01"
+      },
+      "day": {
+        "type": "string",
+        "example": "Mon"
+      },
+      "day_name": {
+        "type": "string",
+        "example": "Monday"
+      },
+      "status": {
+        "type": "string",
+        "example": "Present",
+        "nullable": true,
+        "enum": [
+          "Present",
+          "Half Day",
+          "Week Off",
+          "Holiday",
+          "Leave",
+          "Absent"
+        ]
+      },
+      "attendance_id": {
+        "type": "integer",
+        "nullable": true
+      },
+      "punch_in": {
+        "type": "string",
+        "example": "09:05:00",
+        "nullable": true
+      },
+      "punch_out": {
+        "type": "string",
+        "example": "18:10:00",
+        "nullable": true
+      },
+      "shift_id": {
+        "type": "integer",
+        "nullable": true
+      },
+      "shift_code": {
+        "type": "string",
+        "example": "GEN-001",
+        "nullable": true
+      },
+      "shift_name": {
+        "type": "string",
+        "example": "General Shift",
+        "nullable": true
+      },
+      "shift_start": {
+        "type": "string",
+        "example": "09:00:00",
+        "nullable": true
+      },
+      "shift_end": {
+        "type": "string",
+        "example": "17:00:00",
+        "nullable": true
+      },
+      "working_hours": {
+        "type": "number",
+        "format": "float",
+        "example": 8
+      },
+      "working_hours_formatted": {
+        "type": "string",
+        "example": "8:00"
+      },
+      "break_count": {
+        "type": "integer",
+        "example": 1
+      },
+      "other_count": {
+        "type": "integer",
+        "example": 0
+      },
+      "total_break_minutes": {
+        "type": "integer",
+        "example": 30
+      },
+      "total_other_minutes": {
+        "type": "integer",
+        "example": 0
+      },
+      "total_interval_minutes": {
+        "type": "integer",
+        "example": 30
+      },
+      "ot_minutes": {
+        "type": "integer",
+        "example": 60
+      },
+      "leave_type": {
+        "type": "string",
+        "nullable": true
+      },
+      "leave_category": {
+        "type": "string",
+        "nullable": true,
+        "enum": [
+          "paid",
+          "unpaid"
+        ]
+      },
+      "holiday_name": {
+        "type": "string",
+        "nullable": true
+      },
+      "late_status": {
+        "type": "string",
+        "nullable": true
+      },
+      "late_minutes": {
+        "type": "integer",
+        "example": 0
+      },
+      "is_future": {
+        "type": "boolean",
+        "example": false
+      },
+      "regular_hours": {
+        "type": "number",
+        "format": "float",
+        "example": 8
+      },
+      "hourly_rate": {
+        "type": "number",
+        "format": "float",
+        "example": 120
+      },
+      "regular_earning": {
+        "type": "number",
+        "format": "float",
+        "example": 960
+      },
+      "overtime_hours": {
+        "type": "number",
+        "format": "float",
+        "example": 2
+      },
+      "overtime_rate": {
+        "type": "number",
+        "format": "float",
+        "example": 180
+      },
+      "overtime_earning": {
+        "type": "number",
+        "format": "float",
+        "example": 360
+      },
+      "daily_gross": {
+        "type": "number",
+        "format": "float",
+        "example": 1320
+      },
+      "late_penalty": {
+        "type": "number",
+        "format": "float",
+        "example": 100
+      },
+      "early_departure_penalty": {
+        "type": "number",
+        "format": "float",
+        "example": 50
+      },
+      "daily_penalty": {
+        "type": "number",
+        "format": "float",
+        "example": 150
+      },
+      "daily_net": {
+        "type": "number",
+        "format": "float",
+        "example": 1170
+      },
+      "early_departure_status": {
+        "type": "string",
+        "nullable": true
+      }
+    },
+    "type": "object"
+  },
+  "HourBasedSalaryShiftHistoryItem": {
+    "properties": {
+      "id": {
+        "type": "integer"
+      },
+      "shift_id": {
+        "type": "integer"
+      },
+      "shift_code": {
+        "type": "string",
+        "nullable": true
+      },
+      "shift_name": {
+        "type": "string",
+        "nullable": true
+      },
+      "attendance_mode": {
+        "type": "string",
+        "nullable": true
+      },
+      "effective_from": {
+        "type": "string",
+        "format": "date"
+      },
+      "effective_to": {
+        "type": "string",
+        "format": "date",
+        "nullable": true
+      },
+      "is_active": {
+        "type": "boolean"
+      }
+    },
+    "type": "object"
+  },
+  "HourBasedSalarySummary": {
+    "properties": {
+      "employee_name": {
+        "type": "string",
+        "example": "Ahmed Khan"
+      },
+      "employee_code": {
+        "type": "string",
+        "example": "EMP-001"
+      },
+      "period": {
+        "type": "string",
+        "example": "June 2026"
+      },
+      "hourly_rate": {
+        "type": "number",
+        "format": "float",
+        "example": 120
+      },
+      "overtime_rate": {
+        "type": "number",
+        "format": "float",
+        "example": 180
+      },
+      "total_regular_hours": {
+        "type": "number",
+        "format": "float",
+        "example": 160
+      },
+      "total_overtime_hours": {
+        "type": "number",
+        "format": "float",
+        "example": 12.5
+      },
+      "gross_earnings": {
+        "type": "number",
+        "format": "float",
+        "example": 21450
+      },
+      "total_deductions": {
+        "type": "number",
+        "format": "float",
+        "example": 2574
+      },
+      "late_penalty": {
+        "type": "number",
+        "format": "float",
+        "example": 200
+      },
+      "early_departure_penalty": {
+        "type": "number",
+        "format": "float",
+        "example": 100
+      },
+      "total_penalty": {
+        "type": "number",
+        "format": "float",
+        "example": 300
+      },
+      "net_payable": {
+        "type": "number",
+        "format": "float",
+        "example": 18876
+      },
+      "days_present": {
+        "type": "integer",
+        "example": 20
+      },
+      "overtime_eligibility": {
+        "properties": {
+          "eligible": {
+            "type": "boolean",
+            "example": true
+          },
+          "overtime_counting_type": {
+            "type": "string",
+            "example": "working_days"
+          },
+          "overtime_working_type": {
+            "type": "string",
+            "example": "minimum_days"
+          },
+          "minimum_present_days": {
+            "type": "integer",
+            "example": 22,
+            "nullable": true
+          },
+          "in_scope_days": {
+            "type": "number",
+            "format": "float",
+            "example": 22
+          },
+          "present_days": {
+            "type": "number",
+            "format": "float",
+            "example": 20
+          },
+          "absent_days": {
+            "type": "number",
+            "format": "float",
+            "example": 2
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "type": "object"
+      }
+    },
+    "type": "object"
+  },
+  "HourBasedSalaryData": {
+    "properties": {
+      "summary": {
+        "$ref": "#/components/schemas/HourBasedSalarySummary"
+      },
+      "period": {
+        "$ref": "#/components/schemas/EmployeeMonthlySummaryPeriod"
+      },
+      "shift_history": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/HourBasedSalaryShiftHistoryItem"
+        }
+      },
+      "attendance_summary": {
+        "properties": {
+          "total_records": {
+            "type": "integer"
+          },
+          "status_counts": {
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "records": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/HourBasedSalaryDayRecord"
+        }
+      }
+    },
+    "type": "object"
+  }
+}

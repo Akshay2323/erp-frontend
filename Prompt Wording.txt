@@ -1,0 +1,160 @@
+Now same like this company menu i need prompt for the Orgnization > Branch Menu.
+See now here Cursor Rember some points so do not mentioned and everytime in all in prompts. only required things mentioned:
+
+also for that i will used this below APIs:
+
+Create API Request:
+curl -X 'POST' \
+  'http://192.168.53.9:8000/api/v1/organization/branches' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer 118|m0IBGgYT2bRbxJI1bLlsEcXJzaL51vcB0NFSN5m52c667b6e' \
+  -H 'Content-Type: application/json' \
+  -H 'X-CSRF-TOKEN: ' \
+  -d '{
+  "company_id": "9",
+  "name": "Ahemdabad",
+  "code": "AHB",
+  "address": "Near Kalupur Station, Ahemdabad",
+  "city": "Ahemdabad",
+  "state": "Gujarat",
+  "pincode": "395010",
+  "phone": "8758118665",
+  "email": "hiren@arhamhrms.com",
+  "contact_person_name": "Hiren",
+  "latitude": 0,
+  "longitude": 0,
+  "allowed_radius_meters": 1,
+  "location_required": true,
+  "strict_punch_mode": true,
+  "allow_hr_manual_edit": true,
+  "allow_outside_punch_out": true,
+  "status": "active"
+}'
+
+Create API Response:
+{
+    "success": true,
+    "message": "string",
+    "data": {
+      "branch": {
+        "id": 0,
+        "tenant_id": 0,
+        "company_id": 0,
+        "name": "string",
+        "code": "string",
+        "address": "string",
+        "city": "string",
+        "state": "string",
+        "pincode": "string",
+        "phone": "string",
+        "email": "string",
+        "contact_person_name": "string",
+        "latitude": 0,
+        "longitude": 0,
+        "allowed_radius_meters": 0,
+        "location_required": true,
+        "strict_punch_mode": true,
+        "allow_hr_manual_edit": true,
+        "allow_outside_punch_out": true,
+        "status": "string",
+        "created_at": "2026-04-28T11:36:19.929Z",
+        "updated_at": "2026-04-28T11:36:19.929Z"
+      }
+    },
+    "meta": {}
+  }
+
+  API Error Response:
+  {
+    "success": false,
+    "message": "The company id field is prohibited.",
+    "data": {
+      "errors": {
+        "company_id": [
+          "The company id field is prohibited."
+        ]
+      }
+    },
+    "meta": {}
+  }
+
+  For Company ID Selection call this below mentioned API:
+  
+  Request:
+  curl -X 'GET' \
+  'http://192.168.53.9:8000/api/v1/super-admin/tenants' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer 124|7i3DGCFBUe9AlePlCvoNhW6QL2AUCQYrDZR34lWU2e8b3afa' \
+  -H 'X-CSRF-TOKEN: '
+
+  Response:
+  {
+  "success": true,
+  "message": "Tenants retrieved.",
+  "data": [
+    {
+      "id": 9,
+      "company_name": "Axay Patel",
+      "legal_name": "Axay Patel",
+      "email": "axaypatel@example.com",
+      "phone": "8758118665",
+      "address": "Surat , MajuraGate ,395002",
+      "logo_path": "tenant-logos/9/P0FEClRV6dfyyCUvvbAeSVP4nRvE68ZyNmYm3zuh.png",
+      "logo_url": "http://192.168.53.9:8000/api/v1/super-admin/tenants/9/logo",
+      "status": "active",
+      "is_platform": false,
+      "parent_tenant_id": 2,
+      "subscription_start": "2026-04-29",
+      "subscription_end": "2026-04-29",
+      "users_count": {},
+      "created_at": "2026-04-28T11:04:25+00:00",
+      "updated_at": "2026-04-29T05:04:30+00:00"
+    },
+    {
+      "id": 2,
+      "company_name": "Demo Organization",
+      "legal_name": "Demo Organization",
+      "email": "demo@exapmle.com",
+      "phone": "9726923050",
+      "address": "Surat",
+      "logo_path": null,
+      "logo_url": null,
+      "status": "active",
+      "is_platform": false,
+      "parent_tenant_id": null,
+      "subscription_start": "2026-04-01",
+      "subscription_end": "2026-04-30",
+      "users_count": {},
+      "created_at": "2026-04-20T10:10:35+00:00",
+      "updated_at": "2026-04-29T05:04:17+00:00"
+    },
+    {
+      "id": 8,
+      "company_name": "Mohit Solanki",
+      "legal_name": null,
+      "email": "mohitsolanki@example.com",
+      "phone": "8758118665",
+      "address": "Surat",
+      "logo_path": null,
+      "logo_url": null,
+      "status": "active",
+      "is_platform": false,
+      "parent_tenant_id": 2,
+      "subscription_start": "2026-04-28",
+      "subscription_end": "2026-04-28",
+      "users_count": {},
+      "created_at": "2026-04-28T10:34:27+00:00",
+      "updated_at": "2026-04-28T10:34:27+00:00"
+    }
+  ],
+  "meta": {
+    "current_page": 1,
+    "per_page": 15,
+    "total": 3,
+    "last_page": 1,
+    "from": 1,
+    "to": 3
+  }
+}
+
+See check this project and analyed everything and project in NextJS

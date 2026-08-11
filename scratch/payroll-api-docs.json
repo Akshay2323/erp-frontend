@@ -1,0 +1,2500 @@
+{
+  "/api/v1/payroll/runs/export": {
+    "get": {
+      "tags": [
+        "Exports"
+      ],
+      "summary": "Export payroll runs (Excel)",
+      "operationId": "payrollRunExport",
+      "parameters": [
+        {
+          "name": "month",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "maximum": 12,
+            "minimum": 1
+          }
+        },
+        {
+          "name": "year",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "employee_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "company_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "status",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "processed",
+              "paid"
+            ]
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Excel file stream",
+          "content": {
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        },
+        "422": {
+          "description": "Validation failed"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  },
+  "/api/v1/payroll/runs/bank-export": {
+    "get": {
+      "tags": [
+        "Exports"
+      ],
+      "summary": "Export bank transfer file",
+      "operationId": "payrollBankExport",
+      "parameters": [
+        {
+          "name": "month",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "year",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "format",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "default": "csv",
+            "enum": [
+              "csv",
+              "xlsx"
+            ]
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Bank file stream"
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  },
+  "/api/v1/payroll/payslip/{payrollRun}/download": {
+    "get": {
+      "tags": [
+        "Exports"
+      ],
+      "summary": "Download payslip (PDF)",
+      "operationId": "payrollPayslipDownload",
+      "parameters": [
+        {
+          "name": "payrollRun",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "PDF file stream",
+          "content": {
+            "application/pdf": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        },
+        "404": {
+          "description": "Not found"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  },
+  "/api/v1/payroll/employee-salaries": {
+    "get": {
+      "tags": [
+        "Payroll — Employee salaries"
+      ],
+      "summary": "List all employees with their salary details",
+      "description": "Paginated list of employees with their salary breakdown (basic, HRA, allowances, deductions, net salary, PF/ESI/TDS flags). Supports search, department, branch, and status filters. Group Admin can filter by company_id.",
+      "operationId": "payrollEmployeeSalariesIndex",
+      "parameters": [
+        {
+          "name": "q",
+          "in": "query",
+          "description": "Search by name, code, email, or mobile",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "department_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "branch_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "status",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "active",
+              "inactive",
+              "on_leave"
+            ]
+          }
+        },
+        {
+          "name": "company_id",
+          "in": "query",
+          "description": "Group Admin only",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        {
+          "name": "per_page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "maximum": 100,
+            "minimum": 1
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Paginated employees with salary details",
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "success": {
+                    "type": "boolean"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/EmployeeSalaryList"
+                    }
+                  },
+                  "meta": {
+                    "properties": {
+                      "pagination": {
+                        "$ref": "#/components/schemas/PaginationMeta"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        },
+        "422": {
+          "description": "Validation failed"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  },
+  "/api/v1/payroll/salary-slip": {
+    "get": {
+      "tags": [
+        "Payroll — Employee salaries"
+      ],
+      "summary": "Get salary slip for an employee for a specific month",
+      "description": "Returns a detailed salary slip for a given employee, month, and year. Includes employee details, company info, itemised earnings & deductions, and net pay summary. Admins (Group Admin, Company Admin, HR) can view any in-scope employee; employees with payroll.view.self can view their own.",
+      "operationId": "payrollSalarySlip",
+      "parameters": [
+        {
+          "name": "employee_id",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "month",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "maximum": 12,
+            "minimum": 1
+          }
+        },
+        {
+          "name": "year",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "maximum": 2100,
+            "minimum": 2000
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Salary slip detail",
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "success": {
+                    "type": "boolean"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "properties": {
+                      "salary_slip": {
+                        "$ref": "#/components/schemas/SalarySlip"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "meta": {
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        },
+        "404": {
+          "description": "No salary slip found for the given employee/month/year"
+        },
+        "422": {
+          "description": "Validation failed"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  },
+  "/api/v1/payroll/my-payslips": {
+    "get": {
+      "tags": [
+        "Payroll — My payslips"
+      ],
+      "summary": "List my payslips",
+      "description": "Employee role only; returns payroll runs for the authenticated user's linked employee.",
+      "operationId": "payrollMyPayslipsIndex",
+      "parameters": [
+        {
+          "name": "month",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "year",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        {
+          "name": "per_page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "maximum": 100,
+            "minimum": 1
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Paginated payslips",
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "success": {
+                    "type": "boolean"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "properties": {
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/PayrollRun"
+                        }
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "meta": {
+                    "properties": {
+                      "pagination": {
+                        "$ref": "#/components/schemas/PaginationMeta"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  },
+  "/api/v1/payroll/my-payslips/{payrollRun}": {
+    "get": {
+      "tags": [
+        "Payroll — My payslips"
+      ],
+      "summary": "Show my payslip",
+      "operationId": "payrollMyPayslipsShow",
+      "parameters": [
+        {
+          "name": "payrollRun",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Payslip detail",
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "success": {
+                    "type": "boolean"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "properties": {
+                      "payslip": {
+                        "$ref": "#/components/schemas/PayrollRun"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "meta": {
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden — not your payslip"
+        },
+        "404": {
+          "description": "Not found"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  },
+  "/api/v1/payroll/my-salary": {
+    "get": {
+      "tags": [
+        "Payroll — My salary"
+      ],
+      "summary": "Hour-based salary calculation for a month",
+      "description": "Returns a day-by-day hour-based salary breakdown for every calendar day in the selected month (e.g. 31 rows for March). Each record includes attendance status (Present, Absent, Week Off, Holiday, Leave), punch times, per-day shift from shift history, and salary earnings. Includes monthly summary, period metadata, and shift assignment history.",
+      "operationId": "payrollMySalary",
+      "parameters": [
+        {
+          "name": "month",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "maximum": 12,
+            "minimum": 1
+          }
+        },
+        {
+          "name": "year",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "maximum": 2100,
+            "minimum": 2000
+          }
+        },
+        {
+          "name": "employee_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Salary data retrieved successfully",
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "success": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "message": {
+                    "type": "string",
+                    "example": "Salary data retrieved successfully"
+                  },
+                  "data": {
+                    "$ref": "#/components/schemas/HourBasedSalaryData"
+                  },
+                  "meta": {
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        },
+        "404": {
+          "description": "Employee not found"
+        },
+        "422": {
+          "description": "Validation failed"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  },
+  "/api/v1/payroll/my-salary/payslip": {
+    "get": {
+      "tags": [
+        "Payroll — My salary"
+      ],
+      "summary": "Download hour-based My Salary payslip (PDF)",
+      "description": "Generates a company-branded PDF salary slip from live hour-based calculation. Does not require a finalized PayrollRun.",
+      "operationId": "payrollMySalaryPayslipDownload",
+      "parameters": [
+        {
+          "name": "month",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "maximum": 12,
+            "minimum": 1
+          }
+        },
+        {
+          "name": "year",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "maximum": 2100,
+            "minimum": 2000
+          }
+        },
+        {
+          "name": "employee_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "PDF file stream",
+          "content": {
+            "application/pdf": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        },
+        "404": {
+          "description": "Employee not found"
+        },
+        "422": {
+          "description": "Validation failed"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  },
+  "/api/v1/payroll/payment-history": {
+    "get": {
+      "tags": [
+        "Payroll — Runs"
+      ],
+      "summary": "Payment History (saved salary payments)",
+      "description": "Lists employees with recorded payments for the selected payroll month. Matches Payment History UI: payment date, type, amount, status, transaction/UTR (reserved for online pay).",
+      "operationId": "payrollPaymentHistory",
+      "parameters": [
+        {
+          "name": "month",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "year",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "branch_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "department_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "payment_mode",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "all",
+              "manual",
+              "online"
+            ]
+          }
+        },
+        {
+          "name": "q",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "per_page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Payment history retrieved"
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  },
+  "/api/v1/payroll/payment-history/export": {
+    "get": {
+      "tags": [
+        "Exports"
+      ],
+      "summary": "Download Payment History report (Excel)",
+      "operationId": "payrollPaymentHistoryExport",
+      "parameters": [
+        {
+          "name": "month",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "year",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "branch_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "department_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Excel file"
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  },
+  "/api/v1/payroll/runs": {
+    "get": {
+      "tags": [
+        "Payroll — Runs"
+      ],
+      "summary": "List payroll runs",
+      "operationId": "payrollRunsIndex",
+      "parameters": [
+        {
+          "name": "month",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "year",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "employee_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "company_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "status",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "processed",
+              "paid"
+            ]
+          }
+        },
+        {
+          "name": "department_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        {
+          "name": "per_page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "maximum": 100,
+            "minimum": 1
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Paginated payroll runs",
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "success": {
+                    "type": "boolean"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "properties": {
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/PayrollRun"
+                        }
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "meta": {
+                    "properties": {
+                      "pagination": {
+                        "$ref": "#/components/schemas/PaginationMeta"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    },
+    "post": {
+      "tags": [
+        "Payroll — Runs"
+      ],
+      "summary": "Generate payroll run for an employee",
+      "description": "Creates payroll for employee/month/year. Returns 422 if duplicate or no salary structure.",
+      "operationId": "payrollRunsStore",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/StorePayrollRunRequest"
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Payroll generated",
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "success": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "message": {
+                    "type": "string",
+                    "example": "Payroll generated successfully"
+                  },
+                  "data": {
+                    "properties": {
+                      "payroll_run": {
+                        "$ref": "#/components/schemas/PayrollRun"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "meta": {
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        },
+        "422": {
+          "description": "Examples: duplicate employee/month/year/company; inactive employee; no active salary structure for period."
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  },
+  "/api/v1/payroll/runs/bulk": {
+    "post": {
+      "tags": [
+        "Payroll — Runs"
+      ],
+      "summary": "Bulk generate payroll runs with auto overtime",
+      "description": "Generates payroll for all active employees in scope (or selected employee_ids). Overtime is auto-calculated from attendance and shift rules.",
+      "operationId": "payrollRunsBulkStore",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/BulkStorePayrollRunRequest"
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Bulk payroll generated with summary totals"
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        },
+        "422": {
+          "description": "Validation failed"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  },
+  "/api/v1/payroll/workspace": {
+    "get": {
+      "tags": [
+        "Payroll — Runs"
+      ],
+      "summary": "Dynamic payroll workspace (filters + screens)",
+      "description": "Primary payroll UI API. screen=summary for Payroll Summary dashboard; screen=run for Run Payroll staff board (deprecated — use GET /api/v1/payroll/run-payroll/* instead); screen=all for both. Includes workflow map (wizard steps 1–4 + actions).",
+      "operationId": "payrollWorkspace",
+      "parameters": [
+        {
+          "name": "screen",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "summary",
+              "run",
+              "all"
+            ]
+          }
+        },
+        {
+          "name": "month",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "year",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "company_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "branch_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "department_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "salary_type",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "monthly",
+              "hourly"
+            ]
+          }
+        },
+        {
+          "name": "include_inactive",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "boolean"
+          }
+        },
+        {
+          "name": "per_page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Payroll workspace data"
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  },
+  "/api/v1/payroll/runs/finalize": {
+    "post": {
+      "tags": [
+        "Payroll — Runs"
+      ],
+      "summary": "Finalize payroll runs (bulk)",
+      "description": "Marks selected draft payroll runs as processed (finalized). Omit IDs to finalize all draft runs for the month in scope.",
+      "operationId": "payrollRunsFinalize",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/FinalizePayrollRunsRequest"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Payroll runs finalized"
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  },
+  "/api/v1/payroll/runs/{payrollRun}": {
+    "get": {
+      "tags": [
+        "Payroll — Runs"
+      ],
+      "summary": "Show payroll run",
+      "operationId": "payrollRunsShow",
+      "parameters": [
+        {
+          "name": "payrollRun",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Payroll run detail",
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "success": {
+                    "type": "boolean"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "properties": {
+                      "payroll_run": {
+                        "$ref": "#/components/schemas/PayrollRun"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "meta": {
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        },
+        "404": {
+          "description": "Not found"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  },
+  "/api/v1/payroll/run-flow": {
+    "get": {
+      "tags": [
+        "Payroll — Runs"
+      ],
+      "summary": "Run Payroll wizard step (1–4)",
+      "description": "Legacy GET. Prefer POST /api/v1/payroll/run-flow with JSON body for Save Payroll.",
+      "operationId": "payrollRunFlow",
+      "parameters": [
+        {
+          "name": "step",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "enum": [
+              1,
+              2,
+              3,
+              4
+            ]
+          }
+        },
+        {
+          "name": "month",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "year",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "branch_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "department_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "per_page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Run payroll step data"
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    },
+    "post": {
+      "tags": [
+        "Payroll — Runs"
+      ],
+      "summary": "Run Payroll wizard step (1–4) via POST body",
+      "description": "Preferred for Save Payroll / Verify Salary. Send step, month, year, and employee_ids in JSON body (no query string).",
+      "operationId": "payrollRunFlowPost",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PayrollRunFlowQuery"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Run payroll step data"
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        },
+        "422": {
+          "description": "Validation error"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  },
+  "/api/v1/payroll/save-payments": {
+    "post": {
+      "tags": [
+        "Payroll — Runs"
+      ],
+      "summary": "Save payroll payments (Step 4)",
+      "description": "Record paid amounts per employee. Use full_payment=true to pay full pending balance. Marks payroll as paid when pending is cleared.",
+      "operationId": "payrollSavePayments",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/SavePayrollPaymentsRequest"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Payments saved"
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        },
+        "422": {
+          "description": "Validation error"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  },
+  "/api/v1/payroll/run-payroll/meta": {
+    "get": {
+      "tags": [
+        "Payroll — Run Payroll"
+      ],
+      "summary": "Run Payroll — filter panel and action URLs",
+      "description": "Load filter dropdowns, period info, and mutation action URLs. Call once on page load; refresh when company_id changes.",
+      "operationId": "runPayrollMeta",
+      "parameters": [
+        {
+          "name": "month",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "maximum": 12,
+            "minimum": 1
+          }
+        },
+        {
+          "name": "year",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "company_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Run payroll meta loaded"
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  },
+  "/api/v1/payroll/run-payroll/summary": {
+    "get": {
+      "tags": [
+        "Payroll — Run Payroll"
+      ],
+      "summary": "Run Payroll — summary cards",
+      "description": "Top summary cards for all employees matching filters (not paginated).",
+      "operationId": "runPayrollSummary",
+      "parameters": [
+        {
+          "name": "month",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "year",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "company_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "branch_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "department_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "designation_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "employment_type",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "employee_status",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "active",
+              "inactive"
+            ]
+          }
+        },
+        {
+          "name": "salary_type",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "monthly",
+              "hourly"
+            ]
+          }
+        },
+        {
+          "name": "calculation_mode",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "hour",
+              "day"
+            ]
+          }
+        },
+        {
+          "name": "payroll_status",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "q",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Run payroll summary loaded"
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  },
+  "/api/v1/payroll/run-payroll/employees": {
+    "get": {
+      "tags": [
+        "Payroll — Run Payroll"
+      ],
+      "summary": "Run Payroll — paginated employee table",
+      "description": "Paginated employee payroll rows with nested amounts and per-row permissions.",
+      "operationId": "runPayrollEmployees",
+      "parameters": [
+        {
+          "name": "month",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "year",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 1
+          }
+        },
+        {
+          "name": "per_page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 50,
+            "maximum": 100
+          }
+        },
+        {
+          "name": "sort_by",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "full_name",
+              "employee_code",
+              "net_payable",
+              "payroll_status"
+            ]
+          }
+        },
+        {
+          "name": "sort_dir",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "asc",
+              "desc"
+            ]
+          }
+        },
+        {
+          "name": "q",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Run payroll employees loaded"
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  },
+  "/api/v1/payroll/run-payroll/employees/{employee}/breakdown": {
+    "get": {
+      "tags": [
+        "Payroll — Run Payroll"
+      ],
+      "summary": "Run Payroll — inline salary breakdown",
+      "description": "Lazy-load salary breakdown when a table row is expanded.",
+      "operationId": "runPayrollEmployeeBreakdown",
+      "parameters": [
+        {
+          "name": "employee",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "month",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "year",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Salary breakdown loaded"
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        },
+        "404": {
+          "description": "Employee not found"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  },
+  "/api/v1/payroll/components": {
+    "get": {
+      "tags": [
+        "Payroll — Components"
+      ],
+      "summary": "List salary components",
+      "operationId": "payrollComponentsIndex",
+      "parameters": [
+        {
+          "name": "q",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "type",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "earning",
+              "deduction"
+            ]
+          }
+        },
+        {
+          "name": "status",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "active",
+              "inactive"
+            ]
+          }
+        },
+        {
+          "name": "company_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        {
+          "name": "per_page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "maximum": 100,
+            "minimum": 1
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Paginated salary components",
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "success": {
+                    "type": "boolean"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "properties": {
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/SalaryComponent"
+                        }
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "meta": {
+                    "properties": {
+                      "pagination": {
+                        "$ref": "#/components/schemas/PaginationMeta"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    },
+    "post": {
+      "tags": [
+        "Payroll — Components"
+      ],
+      "summary": "Create salary component",
+      "operationId": "payrollComponentsStore",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/StoreSalaryComponentRequest"
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Created",
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "success": {
+                    "type": "boolean"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "properties": {
+                      "component": {
+                        "$ref": "#/components/schemas/SalaryComponent"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "meta": {
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        },
+        "422": {
+          "description": "Validation failed"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  },
+  "/api/v1/payroll/components/{component}": {
+    "get": {
+      "tags": [
+        "Payroll — Components"
+      ],
+      "summary": "Show salary component",
+      "operationId": "payrollComponentsShow",
+      "parameters": [
+        {
+          "name": "component",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Salary component",
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "success": {
+                    "type": "boolean"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "properties": {
+                      "component": {
+                        "$ref": "#/components/schemas/SalaryComponent"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "meta": {
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        },
+        "404": {
+          "description": "Not found"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    },
+    "put": {
+      "tags": [
+        "Payroll — Components"
+      ],
+      "summary": "Update salary component",
+      "operationId": "payrollComponentsUpdate",
+      "parameters": [
+        {
+          "name": "component",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UpdateSalaryComponentRequest"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Updated",
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "success": {
+                    "type": "boolean"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "properties": {
+                      "component": {
+                        "$ref": "#/components/schemas/SalaryComponent"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "meta": {
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        },
+        "422": {
+          "description": "Validation failed"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    },
+    "delete": {
+      "tags": [
+        "Payroll — Components"
+      ],
+      "summary": "Soft-delete salary component",
+      "operationId": "payrollComponentsDestroy",
+      "parameters": [
+        {
+          "name": "component",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Deleted",
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "success": {
+                    "type": "boolean"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "type": "object"
+                  },
+                  "meta": {
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  },
+  "/api/v1/payroll/salary-structures": {
+    "get": {
+      "tags": [
+        "Payroll — Salary structures"
+      ],
+      "summary": "List employee salary structures",
+      "operationId": "payrollSalaryStructuresIndex",
+      "parameters": [
+        {
+          "name": "employee_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "status",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "active",
+              "inactive"
+            ]
+          }
+        },
+        {
+          "name": "company_id",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        {
+          "name": "per_page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "maximum": 100,
+            "minimum": 1
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Paginated salary structures",
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "success": {
+                    "type": "boolean"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "properties": {
+                      "items": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/EmployeeSalaryStructure"
+                        }
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "meta": {
+                    "properties": {
+                      "pagination": {
+                        "$ref": "#/components/schemas/PaginationMeta"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    },
+    "post": {
+      "tags": [
+        "Payroll — Salary structures"
+      ],
+      "summary": "Create employee salary structure",
+      "description": "Creates one salary structure per employee. If a structure already exists for the employee_id, returns 422 — use PUT /api/v1/payroll/salary-structures/{salaryStructure} to update instead.",
+      "operationId": "payrollSalaryStructuresStore",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/StoreSalaryStructureRequest"
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Created",
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "success": {
+                    "type": "boolean"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "properties": {
+                      "salary_structure": {
+                        "$ref": "#/components/schemas/EmployeeSalaryStructure"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "meta": {
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        },
+        "422": {
+          "description": "Validation failed"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  },
+  "/api/v1/payroll/salary-structures/{salaryStructure}": {
+    "get": {
+      "tags": [
+        "Payroll — Salary structures"
+      ],
+      "summary": "Show salary structure",
+      "operationId": "payrollSalaryStructuresShow",
+      "parameters": [
+        {
+          "name": "salaryStructure",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Salary structure",
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "success": {
+                    "type": "boolean"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "properties": {
+                      "salary_structure": {
+                        "$ref": "#/components/schemas/EmployeeSalaryStructure"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "meta": {
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        },
+        "404": {
+          "description": "Not found"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    },
+    "put": {
+      "tags": [
+        "Payroll — Salary structures"
+      ],
+      "summary": "Update salary structure",
+      "operationId": "payrollSalaryStructuresUpdate",
+      "parameters": [
+        {
+          "name": "salaryStructure",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UpdateSalaryStructureRequest"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Updated",
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "success": {
+                    "type": "boolean"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "properties": {
+                      "salary_structure": {
+                        "$ref": "#/components/schemas/EmployeeSalaryStructure"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "meta": {
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Unauthenticated"
+        },
+        "403": {
+          "description": "Forbidden"
+        },
+        "422": {
+          "description": "Validation failed"
+        }
+      },
+      "security": [
+        {
+          "sanctum": []
+        }
+      ]
+    }
+  }
+}
