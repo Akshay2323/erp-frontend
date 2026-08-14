@@ -1284,6 +1284,11 @@ export type HourBaseDay = {
   late_status?: string | null;
   late_minutes?: number;
   is_future?: boolean;
+  break_count?: number;
+  other_count?: number;
+  total_break_minutes?: number;
+  total_other_minutes?: number;
+  total_interval_minutes?: number;
   regular_hours: number;
   hourly_rate: number;
   regular_earning: number;
@@ -1313,6 +1318,8 @@ export type HourBaseSummary = {
   total_penalty: number;
   net_payable: number;
   days_present: number;
+  total_break_count?: number;
+  total_break_minutes?: number;
 };
 
 export type MySalaryPeriod = {

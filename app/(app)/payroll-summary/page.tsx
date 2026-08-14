@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { PageRefreshingBadge, PayrollPageSkeleton } from "@/components/ui/page-states";
 import { getPayrollWorkspace } from "@/lib/api/payroll";
+import { formatBreakCountSummary } from "@/lib/api/attendance";
 import type { SalaryCalculationMode } from "@/lib/payroll/run-payroll-types";
 import { useAuthToken } from "@/lib/use-auth-token";
 
@@ -191,6 +192,39 @@ export default function PayrollSummaryPage() {
                     </div>
                   </div>
                 ))}
+                {(payroll_summary?.total_break_count != null ||
+                  payroll_summary?.attendance_metrics?.total_break_count != null ||
+                  payroll_summary?.total_break_minutes != null ||
+                  payroll_summary?.attendance_metrics?.total_break_minutes != null) && (
+                  <div className="flex items-center justify-between border-t border-border/50 p-5 hover:bg-muted/30 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">Break Count</span>
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="flex items-center gap-12 sm:gap-24 text-sm">
+                      <span className="text-muted-foreground">
+                        {payroll_summary?.attendance_metrics?.staff_count ??
+                          payroll_summary?.staff_count ??
+                          "—"}{" "}
+                        Staff
+                      </span>
+                      <span className="font-medium text-right w-24 tabular-nums">
+                        {formatBreakCountSummary(
+                          Number(
+                            payroll_summary?.total_break_count ??
+                              payroll_summary?.attendance_metrics?.total_break_count ??
+                              0,
+                          ),
+                          Number(
+                            payroll_summary?.total_break_minutes ??
+                              payroll_summary?.attendance_metrics?.total_break_minutes ??
+                              0,
+                          ),
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             </Card>
 

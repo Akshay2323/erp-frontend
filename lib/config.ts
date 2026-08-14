@@ -4,7 +4,7 @@
 /** Live Laravel API — routes live under /api/v1/... */
 const LIVE_API_URL = "https://appapi.jyotielectricals.co.in/api/";
 /** Local Laravel (`php artisan serve`) — routes live under /api/v1/... */
-const LOCAL_API_URL = "http://192.168.53.9:8000/api/";
+const LOCAL_API_URL = "https://appapi.jyotielectricals.co.in/api/";
 
 // Choose mode:
 // - "auto": auto-detect based on host/environment

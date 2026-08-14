@@ -5,7 +5,7 @@ module.exports = {
       name: "hrms-frontend",
       cwd: __dirname,
       script: "node_modules/next/dist/bin/next",
-      args: "start -H 0.0.0.0",
+      args: "start -H 0.0.0.0 -p 3030",
       interpreter: "node",
       instances: 1,
       autorestart: true,
@@ -13,7 +13,7 @@ module.exports = {
       max_memory_restart: "1G",
       env: {
         NODE_ENV: "production",
-        PORT: 3000,
+        PORT: 3030,
         API_TLS_REJECT_UNAUTHORIZED: "false",
       },
     },

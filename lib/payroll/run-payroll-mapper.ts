@@ -127,6 +127,10 @@ export function mapEmployeeToPayrollRow(employee: Record<string, unknown>): Payr
     workingDays: Number(attendance.working_days ?? 0),
     presentDays: Number(attendance.present_days ?? 0),
     otDays: Number(attendance.ot_days ?? 0),
+    breakCount: Number(
+      attendance.total_break_count ?? attendance.break_count ?? 0,
+    ),
+    breakMinutes: Number(attendance.total_break_minutes ?? 0),
     actualMonthlySalary,
     grossSalary,
     overtimeAmount,

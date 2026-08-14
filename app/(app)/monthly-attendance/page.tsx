@@ -19,6 +19,7 @@ import {
   getAdminAttendance,
   hoursBetweenPunches,
   formatDecimalHoursTotal,
+  formatBreakCountSummary,
   formatWorkingHoursSummaryValue,
   upsertAdminAttendance,
   getEmployeeMonthlySummary,
@@ -37,6 +38,7 @@ import { getEmployees, resolveEmployeeSession, type EmployeeRecord } from "@/lib
 import { EmployeeListAvatar } from "@/components/employee/EmployeeListAvatar";
 import { BulkAttendanceEditModal } from "@/components/attendance/BulkAttendanceEditModal";
 import { EmployeeMonthlyEditModal } from "@/components/attendance/EmployeeMonthlyEditModal";
+import { BreakCountValue } from "@/components/attendance/BreakCountValue";
 import { getTenantsList, type Tenant } from "@/lib/api/tenants";
 import { useAuthToken } from "@/lib/use-auth-token";
 
@@ -166,6 +168,11 @@ function summaryDayToAdminRecord(
     manual_override_reason: null,
     punch_in_image: null,
     punch_out_image: null,
+    break_count: row.break_count ?? 0,
+    other_count: row.other_count ?? 0,
+    total_break_minutes: row.total_break_minutes ?? 0,
+    total_other_minutes: row.total_other_minutes ?? 0,
+    total_interval_minutes: row.total_interval_minutes ?? 0,
     created_at: "",
     updated_at: "",
     manual_modifier: null,
@@ -236,6 +243,8 @@ type GridRow = {
   employee: EmployeeRecord;
   days: (Cell | null)[];
   totalWh: string;
+  totalBreakCount: number;
+  totalBreakMinutes: number;
   loadError?: string;
 };
 
@@ -686,6 +695,8 @@ export default function MonthlyAttendancePage() {
           const empRecords = recordsByEmpId.get(emp.id) ?? [];
           const days: (Cell | null)[] = Array.from({ length: dim }, () => null);
           let totalHoursDecimal = 0;
+          let totalBreakCount = 0;
+          let totalBreakMinutes = 0;
 
           for (const r of empRecords) {
             const d = dayFromDateStr(recordDateFromRow(r), ym);
@@ -699,6 +710,10 @@ export default function MonthlyAttendancePage() {
               if (hours != null) {
                 totalHoursDecimal += hours;
               }
+              const breaks = Number(r.break_count ?? 0);
+              const breakMins = Number(r.total_break_minutes ?? 0);
+              if (Number.isFinite(breaks) && breaks > 0) totalBreakCount += breaks;
+              if (Number.isFinite(breakMins) && breakMins > 0) totalBreakMinutes += breakMins;
             }
           }
 
@@ -708,6 +723,8 @@ export default function MonthlyAttendancePage() {
             employee: emp,
             days: filledDays,
             totalWh,
+            totalBreakCount,
+            totalBreakMinutes,
           } as GridRow;
         });
 
@@ -743,6 +760,8 @@ export default function MonthlyAttendancePage() {
 
         const days: (Cell | null)[] = Array.from({ length: dim }, () => null);
         let totalHoursDecimal = 0;
+        let totalBreakCount = 0;
+        let totalBreakMinutes = 0;
 
         for (const r of summaryRecords) {
           if (r.is_future) continue;
@@ -757,6 +776,10 @@ export default function MonthlyAttendancePage() {
               parseWorkingHoursToDecimal(r.working_hours) ??
               hoursBetweenPunches(r.punch_in, r.punch_out);
             if (hours != null) totalHoursDecimal += hours;
+            const breaks = Number(r.break_count ?? 0);
+            const breakMins = Number(r.total_break_minutes ?? 0);
+            if (Number.isFinite(breaks) && breaks > 0) totalBreakCount += breaks;
+            if (Number.isFinite(breakMins) && breakMins > 0) totalBreakMinutes += breakMins;
           }
         }
 
@@ -768,11 +791,22 @@ export default function MonthlyAttendancePage() {
               ? formatDecimalHoursTotal(totalHoursDecimal)
               : "—";
 
+        const summaryBreaks = Number(summary.total_break_count ?? 0);
+        if (Number.isFinite(summaryBreaks) && summaryBreaks > 0) {
+          totalBreakCount = summaryBreaks;
+        }
+        const summaryBreakMins = Number(summary.total_break_minutes ?? 0);
+        if (Number.isFinite(summaryBreakMins) && summaryBreakMins > 0) {
+          totalBreakMinutes = summaryBreakMins;
+        }
+
         setGridRows([
           {
             employee: emp,
             days,
             totalWh,
+            totalBreakCount,
+            totalBreakMinutes,
           } as GridRow,
         ]);
       }
@@ -805,13 +839,19 @@ export default function MonthlyAttendancePage() {
       toast.message("Nothing to export yet.");
       return;
     }
-    const header = ["Employee Name", "Employee Code", ...dayNumbers.map(String), "Working hours (total)"];
+    const header = ["Employee Name", "Employee Code", ...dayNumbers.map(String), "Working hours (total)", "Break Count"];
     const lines = [header.join(",")];
     for (const row of gridRows) {
       const name = `"${empDisplayName(row.employee).replace(/"/g, '""')}"`;
       const code = row.employee.employee_code ?? "";
       const cells = row.days.map((c) => (c ? c.letter : ""));
-      lines.push([name, `"${code}"`, ...cells, `"${row.totalWh}"`].join(","));
+      lines.push([
+        name,
+        `"${code}"`,
+        ...cells,
+        `"${row.totalWh}"`,
+        formatBreakCountSummary(row.totalBreakCount, row.totalBreakMinutes),
+      ].join(","));
     }
     const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -1040,6 +1080,9 @@ export default function MonthlyAttendancePage() {
                 <th className="min-w-[110px] px-3 py-3 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Working hrs
                 </th>
+                <th className="min-w-[100px] px-3 py-3 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Break Count
+                </th>
               </tr>
               {isAdminUser ? (
                 <tr className="border-b border-border bg-[#F0F7FF] dark:bg-muted/40">
@@ -1089,13 +1132,14 @@ export default function MonthlyAttendancePage() {
                     );
                   })}
                   <th className="px-3 py-2" />
+                  <th className="px-3 py-2" />
                 </tr>
               ) : null}
             </thead>
             <tbody className="divide-y divide-border">
               {gridRows.length === 0 && !loadingGrid ? (
                 <tr>
-                  <td colSpan={dim + (isAdminUser ? 4 : 3)} className="px-4 py-16 text-center text-muted-foreground">
+                  <td colSpan={dim + (isAdminUser ? 5 : 4)} className="px-4 py-16 text-center text-muted-foreground">
                     No employees match the filters, or the directory is empty.
                   </td>
                 </tr>
@@ -1179,6 +1223,13 @@ export default function MonthlyAttendancePage() {
                       );
                     })}
                     <td className="px-3 py-2 text-center text-xs font-medium tabular-nums text-foreground">{row.totalWh}</td>
+                    <td className="px-3 py-2 text-center text-xs font-medium tabular-nums text-foreground">
+                      <BreakCountValue
+                        breakCount={row.totalBreakCount}
+                        totalBreakMinutes={row.totalBreakMinutes}
+                        className="items-center"
+                      />
+                    </td>
                   </tr>
                 ))
               )}
@@ -1236,8 +1287,20 @@ export default function MonthlyAttendancePage() {
                       </div>
                     </div>
                     <div className="text-right shrink-0 space-y-2">
-                      <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Working Hrs</p>
-                      <p className="text-sm font-semibold text-foreground">{row.totalWh}</p>
+                      <div>
+                        <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Working Hrs</p>
+                        <p className="text-sm font-semibold text-foreground">{row.totalWh}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Break Count</p>
+                        <div className="text-sm font-semibold text-foreground">
+                          <BreakCountValue
+                            breakCount={row.totalBreakCount}
+                            totalBreakMinutes={row.totalBreakMinutes}
+                            inline
+                          />
+                        </div>
+                      </div>
                       {isAdminUser ? (
                         <Button
                           type="button"

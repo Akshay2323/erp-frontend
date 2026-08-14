@@ -24,6 +24,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { FeedEmployeeAvatar } from "@/components/live-attendance/FeedEmployeeAvatar";
+import { BreakCountValue } from "@/components/attendance/BreakCountValue";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -218,6 +219,14 @@ function LiveEmployeeCard({ row }: { row: DayAttendanceEmployee }) {
               {attendance.punch_out_time_formatted ?? "—"}
             </span>
           </p>
+          <p className="text-muted-foreground">
+            Breaks:{" "}
+            <BreakCountValue
+              breakCount={attendance.break_count}
+              totalBreakMinutes={attendance.total_break_minutes}
+              inline
+            />
+          </p>
         </div>
       </div>
     </div>
@@ -284,6 +293,14 @@ function DailyEmployeeRow({ row }: { row: DayAttendanceEmployee }) {
           <span className="font-medium text-foreground">
             {attendance.punch_out_time_formatted ?? "—"}
           </span>
+        </p>
+        <p className="text-muted-foreground">
+          Break Count:{" "}
+          <BreakCountValue
+            breakCount={attendance.break_count}
+            totalBreakMinutes={attendance.total_break_minutes}
+            inline
+          />
         </p>
       </div>
     </div>

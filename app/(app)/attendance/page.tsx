@@ -26,11 +26,13 @@ import { getEmployees, resolveEmployeeSession, type EmployeeRecord } from "@/lib
 import {
   getEmployeeMonthlySummary,
   formatHoursAsClock,
+  formatBreakMinutes,
   formatWorkingHoursSummaryValue,
   parseWorkingHoursToDecimal,
   type EmployeeMonthlySummaryEmployee,
   type EmployeeMonthlySummaryShift,
 } from "@/lib/api/attendance";
+import { BreakCountValue } from "@/components/attendance/BreakCountValue";
 
 /* ─────────────────────────────────────────────────────────── types */
 type DayRecord = {
@@ -45,6 +47,7 @@ type DayRecord = {
   late_minutes?: number;
   late_mark?: boolean;
   remarks?: string | null;
+  break_count?: number;
   [key: string]: any;
 };
 
@@ -59,6 +62,8 @@ type SummaryMeta = {
   total_overtime_hours?: string | number;
   total_late_count?: number;
   total_late_minutes?: number;
+  total_break_count?: number;
+  total_break_minutes?: number;
   [key: string]: any;
 };
 
@@ -329,6 +334,7 @@ function AttendanceTable({
 
   const hasMonthOvertime = (parseWorkingHoursToDecimal(summary.total_overtime_hours) ?? 0) > 0;
   const lateCount = Number(summary.total_late_count ?? 0);
+  const breakCount = Number(summary.total_break_count ?? 0);
 
   const stats: {
     label: string;
@@ -355,6 +361,17 @@ function AttendanceTable({
       bg: lateCount > 0 ? "bg-orange-50 dark:bg-orange-900/20" : "bg-muted",
     },
     {
+      label: "Break Count",
+      value: breakCount,
+      sub:
+        !loading && Number(summary.total_break_minutes ?? 0) > 0
+          ? formatBreakMinutes(summary.total_break_minutes)
+          : undefined,
+      icon: Coffee,
+      color: breakCount > 0 ? "text-cyan-600 dark:text-cyan-400" : "text-muted-foreground",
+      bg: breakCount > 0 ? "bg-cyan-50 dark:bg-cyan-900/20" : "bg-muted",
+    },
+    {
       label: "Working hours",
       value: formatWorkingHoursSummaryValue(summary.total_working_hours),
       sub:
@@ -379,7 +396,7 @@ function AttendanceTable({
   return (
     <>
       {/* Summary Stats */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-9">
         {stats.map((s) => (
           <div key={s.label} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
             <div className={`mb-2 inline-flex rounded-lg p-2 ${s.bg}`}>
@@ -441,6 +458,7 @@ function AttendanceTable({
                   <th className="px-5 py-3">Punch In</th>
                   <th className="px-5 py-3">Punch Out</th>
                   <th className="px-5 py-3">Late Mark</th>
+                  <th className="px-5 py-3">Break Count</th>
                   <th className="px-5 py-3">Working Hours</th>
                   <th className="px-5 py-3">Overtime</th>
                   <th className="px-5 py-3">Remarks</th>
@@ -488,6 +506,12 @@ function AttendanceTable({
                           <span className="text-muted-foreground">—</span>
                         )}
                       </td>
+                      <td className="px-5 py-3">
+                        <BreakCountValue
+                          breakCount={row.break_count}
+                          totalBreakMinutes={row.total_break_minutes}
+                        />
+                      </td>
                       <td className="px-5 py-3 tabular-nums">
                         {row.working_hours != null && row.working_hours !== ""
                           ? formatWorkingHoursSummaryValue(row.working_hours)
@@ -509,7 +533,7 @@ function AttendanceTable({
               </tbody>
               <tfoot>
                 <tr className="border-t-2 border-border bg-muted/30 font-medium">
-                  <td colSpan={6} className="px-5 py-3 text-right text-muted-foreground">
+                  <td colSpan={7} className="px-5 py-3 text-right text-muted-foreground">
                     Month total (working hours)
                   </td>
                   <td className="px-5 py-3 tabular-nums text-foreground">{totalWhDisplay}</td>

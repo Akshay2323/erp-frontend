@@ -51,6 +51,7 @@ import {
   type AttendanceEvent,
 } from "@/lib/live-attendance/feed-mapper";
 import { FeedEmployeeAvatar } from "@/components/live-attendance/FeedEmployeeAvatar";
+import { BreakCountValue } from "@/components/attendance/BreakCountValue";
 import { Button } from "@/components/ui/button";
 
 const POLL_INTERVAL_MS = 3000;
@@ -508,6 +509,7 @@ export default function LiveAttendancePage() {
                     <th className="px-5 py-3.5">Employee</th>
                     <th className="px-5 py-3.5">Punch Event</th>
                     <th className="px-5 py-3.5">Time Log</th>
+                    <th className="px-5 py-3.5">Break Count</th>
                     <th className="px-5 py-3.5">Verified Location</th>
                     <th className="px-5 py-3.5">Selfie Validation</th>
                     <th className="px-5 py-3.5 text-right">Verification</th>
@@ -561,6 +563,14 @@ export default function LiveAttendancePage() {
                         {/* Timestamp */}
                         <td className="px-5 py-3 font-semibold text-foreground tracking-tight tabular-nums">
                           {row.time}
+                        </td>
+
+                        <td className="px-5 py-3 tabular-nums">
+                          <BreakCountValue
+                            breakCount={row.breakCount}
+                            totalBreakMinutes={row.totalBreakMinutes}
+                            inline
+                          />
                         </td>
 
                         {/* Location */}
@@ -723,6 +733,14 @@ export default function LiveAttendancePage() {
                         </span>
                         <span className="font-semibold tabular-nums text-foreground shrink-0">{row.time}</span>
                       </div>
+                      <p className="pl-5 text-[11px] text-muted-foreground">
+                        Break Count:{" "}
+                        <BreakCountValue
+                          breakCount={row.breakCount}
+                          totalBreakMinutes={row.totalBreakMinutes}
+                          inline
+                        />
+                      </p>
                       <p className="flex items-start gap-1 text-[11px] text-muted-foreground pl-5">
                         <Building2 className="h-3 w-3 shrink-0 mt-0.5" />
                         <span className="line-clamp-2">{row.geofenceSiteLabel}</span>

@@ -52,6 +52,11 @@ export type DayAttendanceEmployee = {
     shift_code: string | null;
     shift_start: string | null;
     shift_end: string | null;
+    break_count?: number | null;
+    other_count?: number | null;
+    total_break_minutes?: number | null;
+    total_other_minutes?: number | null;
+    total_interval_minutes?: number | null;
   };
 };
 

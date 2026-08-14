@@ -9,8 +9,10 @@ import {
   getAdminEmployeeMonthlyAttendanceReport,
   mapAttendanceGridCodeToStatus,
   upsertAdminAttendance,
+  formatBreakCountSummary,
   type MonthlyAttendanceStatusOption,
 } from "@/lib/api/attendance";
+import { BreakCountValue } from "@/components/attendance/BreakCountValue";
 import {
   adjustPayrollRunVerifyAmounts,
   recalculatePayrollRun,
@@ -41,6 +43,8 @@ type AttendanceEditRow = {
   shiftStart: string | null;
   shiftEnd: string | null;
   workingHours: string | null;
+  breakCount: number;
+  breakMinutes: number;
   editable: boolean;
   note: string | null;
 };
@@ -196,6 +200,8 @@ function buildCalendarCells(
       shiftStart: null,
       shiftEnd: null,
       workingHours: null,
+      breakCount: 0,
+      breakMinutes: 0,
       editable: isDateEditable(date),
       note: null,
     });
@@ -273,6 +279,8 @@ export function VerifySalaryEditDrawer({
             shiftStart: day.shift_start ?? null,
             shiftEnd: day.shift_end ?? null,
             workingHours: day.working_hours ?? null,
+            breakCount: Number(day.break_count ?? 0) || 0,
+            breakMinutes: Number(day.total_break_minutes ?? 0) || 0,
             editable: isDateEditable(day.date),
             note: day.holiday_name ?? day.leave_type ?? null,
           };
@@ -354,6 +362,8 @@ export function VerifySalaryEditDrawer({
           shiftStart: null,
           shiftEnd: null,
           workingHours: null,
+          breakCount: 0,
+          breakMinutes: 0,
           editable: isDateEditable(date),
           note: null,
         } satisfies AttendanceEditRow);
@@ -382,6 +392,8 @@ export function VerifySalaryEditDrawer({
         shiftStart: day.shift_start ?? null,
         shiftEnd: day.shift_end ?? null,
         workingHours: day.working_hours ?? null,
+        breakCount: Number(day.break_count ?? 0) || 0,
+        breakMinutes: Number(day.total_break_minutes ?? 0) || 0,
         editable: isDateEditable(day.date),
         note: day.holiday_name ?? day.leave_type ?? null,
       };
@@ -594,6 +606,15 @@ export function VerifySalaryEditDrawer({
                 <span className="rounded-md bg-muted px-2 py-1 text-muted-foreground">
                   Hours: {String(summary.total_working_hours ?? "—")}
                 </span>
+                <span className="rounded-md bg-cyan-500/10 px-2 py-1 text-cyan-700 dark:text-cyan-300">
+                  Breaks:{" "}
+                  {formatBreakCountSummary(
+                    num(summary.total_break_count) ||
+                      attendanceRows.reduce((acc, row) => acc + (row.breakCount || 0), 0),
+                    num(summary.total_break_minutes) ||
+                      attendanceRows.reduce((acc, row) => acc + (row.breakMinutes || 0), 0),
+                  )}
+                </span>
               </div>
             ) : null}
 
@@ -719,6 +740,16 @@ export function VerifySalaryEditDrawer({
                             : "No punch times"}
                           {selectedRow.workingHours ? ` · ${selectedRow.workingHours}` : ""}
                         </p>
+                        {(selectedRow.breakCount > 0 || selectedRow.breakMinutes > 0) && (
+                          <p className="text-xs text-muted-foreground">
+                            Breaks:{" "}
+                            <BreakCountValue
+                              breakCount={selectedRow.breakCount}
+                              totalBreakMinutes={selectedRow.breakMinutes}
+                              inline
+                            />
+                          </p>
+                        )}
                         {selectedRow.note ? (
                           <p className="text-xs text-muted-foreground">{selectedRow.note}</p>
                         ) : null}
@@ -773,6 +804,7 @@ export function VerifySalaryEditDrawer({
                         <th className="px-3 py-2 font-medium">Date</th>
                         <th className="px-3 py-2 font-medium">Status</th>
                         <th className="px-3 py-2 font-medium">Hours</th>
+                        <th className="px-3 py-2 font-medium">Break Count</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
@@ -829,6 +861,12 @@ export function VerifySalaryEditDrawer({
                           </td>
                           <td className="px-3 py-2 align-top tabular-nums text-muted-foreground">
                             {row.workingHours ?? "—"}
+                          </td>
+                          <td className="px-3 py-2 align-top tabular-nums text-muted-foreground">
+                            <BreakCountValue
+                              breakCount={row.breakCount}
+                              totalBreakMinutes={row.breakMinutes}
+                            />
                           </td>
                         </tr>
                       ))}

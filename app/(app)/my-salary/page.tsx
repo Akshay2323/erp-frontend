@@ -16,6 +16,7 @@ import {
   Timer,
   TrendingUp,
   CheckCircle2,
+  Coffee,
 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -23,6 +24,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ConfirmSalaryModal } from "@/components/payroll/ConfirmSalaryModal";
+import { BreakCountValue } from "@/components/attendance/BreakCountValue";
 import { SalaryConfirmationBadge } from "@/components/payroll/run-payroll/SalaryConfirmationBadge";
 import { useAuthToken } from "@/lib/use-auth-token";
 import { API_BASE_URL } from "@/lib/config";
@@ -31,6 +33,7 @@ import {
   getMySalary,
   type DownloadMySalaryPayslipError,
 } from "@/lib/api/payroll";
+import { formatBreakMinutes } from "@/lib/api/attendance";
 import { resolveEmployeeSession } from "@/lib/api/employees/methods";
 import { clearAuthSession } from "@/lib/auth-cookie";
 import { readAuthUser, resolveEmployeeId } from "@/lib/auth-session";
@@ -399,6 +402,13 @@ export default function MySalaryPage() {
   const totalEarned = regularTotal + otTotal || 1;
   const regPct = Math.round((regularTotal / totalEarned) * 100);
 
+  const breakCountTotal =
+    summary?.total_break_count ??
+    records.reduce((acc, r) => acc + (Number(r.break_count) || 0), 0);
+  const breakMinutesTotal =
+    summary?.total_break_minutes ??
+    records.reduce((acc, r) => acc + (Number(r.total_break_minutes) || 0), 0);
+
   const statCards = summary
     ? [
         { label: "Regular Hours",  value: fmtHrs(summary.total_regular_hours),  color: "text-sky-600 dark:text-sky-400",         bg: "bg-sky-50 dark:bg-sky-900/20",         icon: Clock },
@@ -408,6 +418,14 @@ export default function MySalaryPage() {
         { label: "Penalty",        value: fmtCurrency(summary.total_penalty ?? 0), color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-900/20", icon: AlertCircle },
         { label: "Net Payable",    value: fmtCurrency(netPayable),              color: "text-primary",                           bg: "bg-primary/10",                        icon: Wallet },
         { label: "Days Present",   value: summary.days_present,                 color: "text-teal-600 dark:text-teal-400",       bg: "bg-teal-50 dark:bg-teal-900/20",       icon: Timer },
+        {
+          label: "Break Count",
+          value: breakCountTotal,
+          sub: breakMinutesTotal > 0 ? formatBreakMinutes(breakMinutesTotal) : undefined,
+          color: breakCountTotal > 0 ? "text-cyan-600 dark:text-cyan-400" : "text-muted-foreground",
+          bg: breakCountTotal > 0 ? "bg-cyan-50 dark:bg-cyan-900/20" : "bg-muted",
+          icon: Coffee,
+        },
       ]
     : [];
 
@@ -421,8 +439,8 @@ export default function MySalaryPage() {
           <div className="h-8 w-56 animate-pulse rounded-lg bg-muted/70" />
           <div className="mt-2 h-4 w-80 animate-pulse rounded-lg bg-muted/40" />
         </div>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-7">
-          {Array.from({ length: 7 }).map((_, i) => (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-8">
+          {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="h-24 animate-pulse rounded-2xl bg-muted/30" />
           ))}
         </div>
@@ -571,7 +589,7 @@ export default function MySalaryPage() {
       )}
 
       {/* ── Stat Cards */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-7">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-8">
         {statCards.map((s) => (
           <div key={s.label} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
             <div className={`mb-3 inline-flex rounded-lg p-2 ${s.bg}`}>
@@ -579,6 +597,9 @@ export default function MySalaryPage() {
             </div>
             <p className="text-xl font-bold">{s.value}</p>
             <p className="text-xs text-muted-foreground mt-0.5">{s.label}</p>
+            {"sub" in s && s.sub ? (
+              <p className="text-[11px] text-muted-foreground mt-1 leading-tight">{s.sub}</p>
+            ) : null}
           </div>
         ))}
       </div>
@@ -748,6 +769,7 @@ export default function MySalaryPage() {
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 whitespace-nowrap">Punch In</th>
                   <th className="px-4 py-3 whitespace-nowrap">Punch Out</th>
+                  <th className="px-4 py-3 text-right whitespace-nowrap">Break Count</th>
                   <th className="px-4 py-3 text-right whitespace-nowrap">Work Hrs</th>
                   <th className="px-4 py-3 text-right whitespace-nowrap">OT Hrs</th>
                   <th className="px-4 py-3 text-right whitespace-nowrap">Reg. Earn</th>
@@ -793,6 +815,13 @@ export default function MySalaryPage() {
                       </td>
                       <td className="px-4 py-2.5 whitespace-nowrap text-xs tabular-nums">{fmt12(row.punch_in)}</td>
                       <td className="px-4 py-2.5 whitespace-nowrap text-xs tabular-nums">{fmt12(row.punch_out)}</td>
+                      <td className="px-4 py-2.5 text-right tabular-nums">
+                        <BreakCountValue
+                          breakCount={row.break_count}
+                          totalBreakMinutes={row.total_break_minutes}
+                          className="items-end"
+                        />
+                      </td>
                       <td className="px-4 py-2.5 text-right tabular-nums text-muted-foreground">
                         {row.working_hours_formatted && row.working_hours_formatted !== "0:00"
                           ? (() => {
@@ -845,7 +874,15 @@ export default function MySalaryPage() {
               </tbody>
               <tfoot>
                 <tr className="border-t-2 border-border bg-muted/30 font-semibold">
-                  <td colSpan={6} className="px-4 py-3 text-right text-sm text-muted-foreground">Monthly Totals</td>
+                  <td colSpan={5} className="px-4 py-3 text-right text-sm text-muted-foreground">Monthly Totals</td>
+                  <td className="px-4 py-3 text-right tabular-nums text-cyan-700 dark:text-cyan-300">
+                    <BreakCountValue
+                      breakCount={breakCountTotal}
+                      totalBreakMinutes={breakMinutesTotal}
+                      className="items-end"
+                    />
+                  </td>
+                  <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{fmtHrs(summary.total_regular_hours)}</td>
                   <td className="px-4 py-3 text-right tabular-nums text-amber-600 dark:text-amber-400">{fmtHrs(summary.total_overtime_hours)}</td>
                   <td className="px-4 py-3 text-right tabular-nums text-emerald-600 dark:text-emerald-400">{fmtCurrency(regularTotal)}</td>
                   <td className="px-4 py-3 text-right tabular-nums text-amber-600 dark:text-amber-400">{fmtCurrency(otTotal)}</td>

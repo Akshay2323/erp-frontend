@@ -19,6 +19,7 @@ import { OTToggle } from "./OTToggle";
 import { PayrollExpandableDetails } from "./PayrollExpandableDetails";
 import { SalaryConfirmationBadge } from "./SalaryConfirmationBadge";
 import { FeedEmployeeAvatar } from "@/components/live-attendance/FeedEmployeeAvatar";
+import { BreakCountValue } from "@/components/attendance/BreakCountValue";
 import type { SalaryConfirmationStatus } from "@/lib/payroll/salary-confirmation-store";
 import { getConfirmationStatus } from "@/lib/payroll/salary-confirmation-store";
 
@@ -97,8 +98,8 @@ export const PayrollTable = memo(function PayrollTable({
   };
 
   const hourHeaders = hourMode
-    ? ["Expected Hours", "Worked Hours", "OT Hours"]
-    : ["Working Days", "Present Days", "OT Days"];
+    ? ["Expected Hours", "Worked Hours", "OT Hours", "Break Count"]
+    : ["Working Days", "Present Days", "OT Days", "Break Count"];
 
   const renderSortableHeader = (col: SortableColumn) => (
     <th key={col.key} className="p-3 text-left font-medium">
@@ -164,6 +165,16 @@ export const PayrollTable = memo(function PayrollTable({
             <div>
               <span className="text-muted-foreground">Pending</span>
               <p className="font-semibold">{formatIndianCurrency(row.pending)}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Break Count</span>
+              <div className="font-semibold">
+                <BreakCountValue
+                  breakCount={row.breakCount}
+                  totalBreakMinutes={row.breakMinutes}
+                  inline
+                />
+              </div>
             </div>
             <div>
               <span className="text-muted-foreground">Confirmation</span>

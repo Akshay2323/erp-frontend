@@ -28,6 +28,7 @@ import {
   readPayrollVerifyContext,
   type PayrollVerifyContext,
 } from "@/lib/payroll/verify-context";
+import { BreakCountValue } from "@/components/attendance/BreakCountValue";
 import { useAuthToken } from "@/lib/use-auth-token";
 import { cn } from "@/lib/utils";
 
@@ -69,6 +70,21 @@ function staffRemaining(staff: StaffRow): number {
   return num(
     staff.remaining_amount ?? staff.remaining ?? staff.pending_amount ?? amounts.pending_amount,
   );
+}
+
+function staffBreakCount(staff: StaffRow): number {
+  const attendance = (staff.attendance as Record<string, unknown> | undefined) ?? {};
+  return num(
+    attendance.total_break_count ??
+      attendance.break_count ??
+      staff.total_break_count ??
+      staff.break_count,
+  );
+}
+
+function staffBreakMinutes(staff: StaffRow): number {
+  const attendance = (staff.attendance as Record<string, unknown> | undefined) ?? {};
+  return num(attendance.total_break_minutes ?? staff.total_break_minutes);
 }
 
 export default function VerifySalaryPage() {
@@ -440,6 +456,7 @@ export default function VerifySalaryPage() {
                   <th className="w-14 px-4 py-3 font-semibold"> </th>
                   <th className="px-4 py-3 font-semibold">Employee</th>
                   <th className="px-4 py-3 text-right font-semibold">CTC / Month</th>
+                  <th className="px-4 py-3 text-right font-semibold">Break Count</th>
                   <th className="px-4 py-3 text-right font-semibold">OT Payable</th>
                   <th className="px-4 py-3 text-right font-semibold">Penalty</th>
                   <th className="px-4 py-3 text-right font-semibold">Payable</th>
@@ -451,7 +468,7 @@ export default function VerifySalaryPage() {
               <tbody className="divide-y divide-border">
                 {staffList.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-4 py-12 text-center text-muted-foreground">
+                    <td colSpan={10} className="px-4 py-12 text-center text-muted-foreground">
                       No staff records found for this payroll period.
                     </td>
                   </tr>
@@ -486,6 +503,13 @@ export default function VerifySalaryPage() {
                         </td>
                         <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
                           {ctcDisplay}
+                        </td>
+                        <td className="px-4 py-3 text-right font-medium tabular-nums text-foreground">
+                          <BreakCountValue
+                            breakCount={staffBreakCount(staff)}
+                            totalBreakMinutes={staffBreakMinutes(staff)}
+                            className="items-end"
+                          />
                         </td>
                         <td className="px-4 py-3 text-right font-medium tabular-nums text-foreground">
                           {formatAmount(staffOt(staff))}

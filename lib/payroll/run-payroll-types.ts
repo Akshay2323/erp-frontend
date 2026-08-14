@@ -39,6 +39,10 @@ export type PayrollStaffRow = {
   workingDays: number;
   presentDays: number;
   otDays: number;
+  /** Month total break intervals when API provides attendance.total_break_count. */
+  breakCount: number;
+  /** Total break duration in minutes for the month. */
+  breakMinutes: number;
   actualMonthlySalary: number;
   grossSalary: number;
   overtimeAmount: number;

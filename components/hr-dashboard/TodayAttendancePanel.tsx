@@ -9,7 +9,7 @@ import {
   Clock3,
   LogIn,
   LogOut,
-  Mail,
+  MessageCircle,
   Phone,
   RefreshCw,
   Search,
@@ -36,7 +36,7 @@ import {
   type DayAttendanceSummary,
 } from "@/lib/api/day-attendance";
 import { getDepartments, type Department } from "@/lib/api/department";
-import { attendanceBoardHref } from "@/lib/attendance-board";
+import { attendanceBoardHref, telHref, whatsappHref } from "@/lib/attendance-board";
 import { clearAuthSession } from "@/lib/auth-cookie";
 import { cn } from "@/lib/utils";
 
@@ -125,18 +125,48 @@ function EmployeeIdentity({ row }: { row: DayAttendanceEmployee }) {
   );
 }
 
-function ContactInfo({ row, className }: { row: DayAttendanceEmployee; className?: string }) {
-  const { employee } = row;
+function ContactActions({ mobile }: { mobile: string | null | undefined }) {
+  const callUrl = telHref(mobile);
+  const waUrl = whatsappHref(mobile);
+
   return (
-    <div className={cn("space-y-1 text-xs text-muted-foreground", className)}>
-      <p className="flex items-center gap-1.5 truncate">
-        <Phone className="h-3 w-3 shrink-0" />
-        {employee.mobile ?? "—"}
-      </p>
-      <p className="flex items-center gap-1.5 truncate">
-        <Mail className="h-3 w-3 shrink-0" />
-        {employee.email ?? "—"}
-      </p>
+    <div className="flex shrink-0 items-center gap-1.5">
+      {callUrl ? (
+        <a
+          aria-label="Call"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 transition-colors hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+          href={callUrl}
+        >
+          <Phone className="h-3.5 w-3.5" />
+        </a>
+      ) : (
+        <span
+          aria-disabled
+          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border bg-muted/40 text-muted-foreground opacity-50"
+          title="No mobile number"
+        >
+          <Phone className="h-3.5 w-3.5" />
+        </span>
+      )}
+      {waUrl ? (
+        <a
+          aria-label="WhatsApp"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#25D366]/40 bg-[#25D366]/15 text-[#128C7E] transition-colors hover:bg-[#25D366]/25 dark:text-[#25D366]"
+          href={waUrl}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          <MessageCircle className="h-3.5 w-3.5" />
+        </a>
+      ) : (
+        <span
+          aria-disabled
+          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border bg-muted/40 text-muted-foreground opacity-50"
+          title="No mobile number"
+        >
+          <MessageCircle className="h-3.5 w-3.5" />
+        </span>
+      )}
     </div>
   );
 }
@@ -594,7 +624,7 @@ export function TodayAttendancePanel({ token }: { token: string }) {
                     ) : null}
                   </div>
                   <div className="mt-3 flex flex-wrap items-start justify-between gap-3">
-                    <ContactInfo row={row} />
+                    <ContactActions mobile={row.employee.mobile} />
                     {tab === "present" ? <PunchTimes row={row} /> : null}
                   </div>
                   {tab === "present" ? (
@@ -637,7 +667,7 @@ export function TodayAttendancePanel({ token }: { token: string }) {
                         <EmployeeIdentity row={row} />
                       </td>
                       <td className="px-4 py-3">
-                        <ContactInfo row={row} />
+                        <ContactActions mobile={row.employee.mobile} />
                       </td>
                       {tab === "present" ? (
                         <>

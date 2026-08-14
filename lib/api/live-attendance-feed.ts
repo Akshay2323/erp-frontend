@@ -38,6 +38,8 @@ export type LiveAttendanceFeedItem = {
   };
   remarks?: string | null;
   company?: { id?: number; name?: string | null };
+  break_count?: number | null;
+  total_break_minutes?: number | null;
 };
 
 export type LiveAttendanceFeedStats = {

@@ -29,6 +29,8 @@ export type AttendanceEvent = {
   googleMapsUrl: string | null;
   status: "verified" | "flagged";
   device: string;
+  breakCount: number;
+  totalBreakMinutes: number;
 };
 
 export function getEmployeeInitials(name: string): string {
@@ -118,6 +120,8 @@ export function mapLiveFeedItemToEvent(item: LiveAttendanceFeedItem): Attendance
     googleMapsUrl: item.location.google_maps_url ?? null,
     status: isFlagged ? "flagged" : "verified",
     device: item.device.info?.trim() || "Unknown device",
+    breakCount: Number(item.break_count ?? 0) || 0,
+    totalBreakMinutes: Number(item.total_break_minutes ?? 0) || 0,
   };
 }
 

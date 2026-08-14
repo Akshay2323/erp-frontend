@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import { useAuthToken } from "@/lib/use-auth-token";
 import { getEmployees, getEmployeeBirthdays, resolveEmployeeSession } from "@/lib/api/employee";
 import type { EmployeeBirthdaysResponse } from "@/lib/api/employees/types";
-import { punchIn, punchOut, getTodayStatus } from "@/lib/api/attendance";
+import { punchIn, punchOut, getTodayStatus, formatBreakMinutes } from "@/lib/api/attendance";
 import { getLeaveBalances } from "@/lib/api/leave-policy";
 import { getHolidays, type Holiday } from "@/lib/api/holiday";
 import { normalizeLeaveBalances } from "@/lib/leave-apply-utils";
@@ -687,7 +687,7 @@ export default function EmployeeDashboard() {
                 </div>
                 <p className="text-sm font-medium text-amber-800 dark:text-amber-300">Break Time</p>
                 <p className="mt-1 text-xl font-semibold text-amber-950 dark:text-amber-100">
-                  {totalBreakMinutes} mins
+                  {formatBreakMinutes(totalBreakMinutes)}
                 </p>
               </div>
 

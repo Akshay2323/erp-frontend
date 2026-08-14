@@ -3,6 +3,7 @@
 import { memo } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { FeedEmployeeAvatar } from "@/components/live-attendance/FeedEmployeeAvatar";
+import { BreakCountValue } from "@/components/attendance/BreakCountValue";
 import { formatIndianCurrency } from "@/lib/payroll/format-currency";
 import { formatRowCtc } from "@/lib/payroll/run-payroll-mapper";
 import type { PayrollSalaryBreakdown, PayrollStaffRow } from "@/lib/payroll/run-payroll-types";
@@ -86,12 +87,18 @@ export const PayrollRow = memo(function PayrollRow({
             <td className="p-3 tabular-nums">{row.totalHours.toFixed(1)}</td>
             <td className="p-3 tabular-nums">{row.workedHours.toFixed(1)}</td>
             <td className="p-3 tabular-nums">{row.otHours.toFixed(1)}</td>
+            <td className="p-3 tabular-nums">
+              <BreakCountValue breakCount={row.breakCount} totalBreakMinutes={row.breakMinutes} />
+            </td>
           </>
         ) : (
           <>
             <td className="p-3 tabular-nums">{row.workingDays}</td>
             <td className="p-3 tabular-nums">{row.presentDays.toFixed(1)}</td>
             <td className="p-3 tabular-nums">{row.otDays.toFixed(1)}</td>
+            <td className="p-3 tabular-nums">
+              <BreakCountValue breakCount={row.breakCount} totalBreakMinutes={row.breakMinutes} />
+            </td>
           </>
         )}
         <td className="p-3 tabular-nums font-medium">{formatIndianCurrency(row.actualMonthlySalary)}</td>

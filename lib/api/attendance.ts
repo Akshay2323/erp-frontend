@@ -172,6 +172,12 @@ export type EmployeeMonthlySummaryDay = {
   late_minutes?: number;
   /** True when the day is marked late per shift late_rules. */
   late_mark?: boolean;
+  /** Number of break intervals taken that day. */
+  break_count?: number;
+  other_count?: number;
+  total_break_minutes?: number;
+  total_other_minutes?: number;
+  total_interval_minutes?: number;
   remarks?: string | null;
   is_future?: boolean;
 };
@@ -190,6 +196,14 @@ export type EmployeeMonthlySummaryStats = {
   total_overtime_hours?: string | number;
   total_late_count?: number;
   total_late_minutes?: number;
+  total_break_count?: number;
+  total_other_count?: number;
+  total_break_minutes?: number;
+  total_other_minutes?: number;
+  total_interval_minutes?: number;
+  total_break_hours?: string | number;
+  total_other_hours?: string | number;
+  total_interval_hours?: string | number;
   [key: string]: unknown;
 };
 
@@ -316,6 +330,33 @@ export function formatWorkingHoursSummaryValue(value: string | number | undefine
   return String(value);
 }
 
+/** Human-readable break duration (e.g. `1 hr 2 min`, `45 min`, `0 min`). */
+export function formatBreakMinutes(totalMinutes: number | null | undefined): string {
+  if (totalMinutes == null || !Number.isFinite(totalMinutes) || totalMinutes <= 0) {
+    return "0 min";
+  }
+  const abs = Math.round(Math.abs(totalMinutes));
+  const h = Math.floor(abs / 60);
+  const m = abs % 60;
+  if (h === 0) return `${m} min`;
+  if (m === 0) return `${h} hr`;
+  return `${h} hr ${m} min`;
+}
+
+/** Summary line for break count + duration, e.g. `2 · 1 hr 2 min`. */
+export function formatBreakCountSummary(
+  breakCount: number | null | undefined,
+  totalBreakMinutes?: number | null | undefined,
+): string {
+  const count = Number(breakCount ?? 0);
+  const minutes = Number(totalBreakMinutes ?? 0);
+  const duration = formatBreakMinutes(minutes);
+  if (count <= 0 && minutes <= 0) return "0";
+  if (count > 0 && minutes > 0) return `${count} · ${duration}`;
+  if (count > 0) return String(count);
+  return duration;
+}
+
 function statusCountsToSummary(
   statusCounts: Record<string, unknown> | null | undefined,
 ): EmployeeMonthlySummaryStats {
@@ -366,6 +407,22 @@ function monthSummaryToStats(
     summary.total_late_count = monthSummary.total_late_count;
   if (typeof monthSummary.total_late_minutes === "number")
     summary.total_late_minutes = monthSummary.total_late_minutes;
+  if (typeof monthSummary.total_break_count === "number")
+    summary.total_break_count = monthSummary.total_break_count;
+  if (typeof monthSummary.total_other_count === "number")
+    summary.total_other_count = monthSummary.total_other_count;
+  if (typeof monthSummary.total_break_minutes === "number")
+    summary.total_break_minutes = monthSummary.total_break_minutes;
+  if (typeof monthSummary.total_other_minutes === "number")
+    summary.total_other_minutes = monthSummary.total_other_minutes;
+  if (typeof monthSummary.total_interval_minutes === "number")
+    summary.total_interval_minutes = monthSummary.total_interval_minutes;
+  if (monthSummary.total_break_hours != null && monthSummary.total_break_hours !== "")
+    summary.total_break_hours = monthSummary.total_break_hours as string | number;
+  if (monthSummary.total_other_hours != null && monthSummary.total_other_hours !== "")
+    summary.total_other_hours = monthSummary.total_other_hours as string | number;
+  if (monthSummary.total_interval_hours != null && monthSummary.total_interval_hours !== "")
+    summary.total_interval_hours = monthSummary.total_interval_hours as string | number;
   return summary;
 }
 
@@ -467,6 +524,26 @@ function mapDailyBreakdownRow(row: Record<string, unknown>): EmployeeMonthlySumm
       const status = String(row.late_status ?? "").toLowerCase();
       return status === "late" || status.includes("penalty");
     })(),
+    break_count: (() => {
+      const n = Number(row.break_count ?? 0);
+      return Number.isFinite(n) ? n : 0;
+    })(),
+    other_count: (() => {
+      const n = Number(row.other_count ?? 0);
+      return Number.isFinite(n) ? n : 0;
+    })(),
+    total_break_minutes: (() => {
+      const n = Number(row.total_break_minutes ?? 0);
+      return Number.isFinite(n) ? n : 0;
+    })(),
+    total_other_minutes: (() => {
+      const n = Number(row.total_other_minutes ?? 0);
+      return Number.isFinite(n) ? n : 0;
+    })(),
+    total_interval_minutes: (() => {
+      const n = Number(row.total_interval_minutes ?? 0);
+      return Number.isFinite(n) ? n : 0;
+    })(),
     remarks: (row.remarks ?? row.holiday_name ?? row.leave_type ?? null) as string | null,
     is_future: row.is_future === true,
   };
@@ -547,6 +624,11 @@ export function normalizeEmployeeMonthlySummary(
   if (summary.total_working_hours == null || summary.total_working_hours === "") {
     const summed = sumWorkingHoursFromRecords(sorted);
     if (summed > 0) summary.total_working_hours = summed;
+  }
+
+  if (summary.total_break_count == null) {
+    const breakSum = sorted.reduce((acc, r) => acc + (Number(r.break_count) || 0), 0);
+    if (breakSum > 0) summary.total_break_count = breakSum;
   }
 
   const employee = parseMonthlySummaryEmployee(d.employee);
@@ -652,6 +734,11 @@ export type AdminAttendanceRecord = {
   manual_override_reason: string | null;
   punch_in_image: string | null;
   punch_out_image: string | null;
+  break_count?: number | null;
+  other_count?: number | null;
+  total_break_minutes?: number | null;
+  total_other_minutes?: number | null;
+  total_interval_minutes?: number | null;
   created_at: string;
   updated_at: string;
   manual_modifier: unknown;
@@ -1031,6 +1118,11 @@ export type EmployeeMonthlyAttendanceDay = {
   is_late?: boolean;
   holiday_name?: string | null;
   leave_type?: string | null;
+  break_count?: number | null;
+  other_count?: number | null;
+  total_break_minutes?: number | null;
+  total_other_minutes?: number | null;
+  total_interval_minutes?: number | null;
 };
 
 export type EmployeeMonthlyAttendanceReport = {
@@ -1049,6 +1141,7 @@ export type EmployeeMonthlyAttendanceReport = {
     holiday_days?: number;
     weekend_days?: number;
     total_working_hours?: string;
+    total_break_count?: number;
   };
   attendance_grid: EmployeeMonthlyAttendanceDay[];
 };
