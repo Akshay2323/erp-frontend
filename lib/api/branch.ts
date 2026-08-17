@@ -1,4 +1,5 @@
 import { API_BASE_URL } from "@/lib/config";
+import { normalizeApiList } from "@/lib/api/normalize-list";
 
 export type BranchStatus = "active" | "inactive";
 
@@ -123,7 +124,7 @@ export async function getBranches(
     if (!response.ok || !payload.success) {
       return fail(payload.message || "Unable to fetch branches.");
     }
-    return payload;
+    return { ...payload, data: normalizeApiList<Branch>(payload.data) };
   } catch (error) {
     if (isBranchApiError(error)) return Promise.reject(error);
     return fail("Unable to fetch branches.");

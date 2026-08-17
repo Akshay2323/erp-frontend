@@ -319,7 +319,7 @@ export default function HrDashboardPage() {
                 <p className="text-sm text-muted-foreground">No upcoming birthdays in the next 30 days.</p>
               ) : (
                 <>
-                  {birthdays.today.items.map((emp) => (
+                  {(birthdays?.today?.items ?? []).map((emp) => (
                     <div key={emp.id} className="flex items-center gap-3">
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-pink-100 text-pink-600">
                         <Gift className="h-4 w-4" />
@@ -333,7 +333,7 @@ export default function HrDashboardPage() {
                       </span>
                     </div>
                   ))}
-                  {birthdays.upcoming.items.slice(0, 5).map((emp) => (
+                  {(birthdays?.upcoming?.items ?? []).slice(0, 5).map((emp) => (
                     <div key={emp.id} className="flex items-center gap-3">
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
                         <Gift className="h-4 w-4" />

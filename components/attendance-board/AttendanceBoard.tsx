@@ -29,7 +29,8 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { NativeSelectFilter } from "@/components/ui/native-select";
-import { getBranches } from "@/lib/api/branch";
+import { getBranches, type Branch } from "@/lib/api/branch";
+import { normalizeApiList } from "@/lib/api/normalize-list";
 import {
   DayAttendanceError,
   getDayAttendanceStatus,
@@ -374,15 +375,11 @@ export function AttendanceBoard() {
     staleTime: 10 * 60 * 1000,
   });
 
-  const branches = branchesQuery.data?.data ?? [];
-  const departments: Department[] = useMemo(() => {
-    const raw = departmentsQuery.data?.data;
-    if (Array.isArray(raw)) return raw;
-    if (raw && typeof raw === "object" && Array.isArray((raw as { items?: Department[] }).items)) {
-      return (raw as { items: Department[] }).items;
-    }
-    return [];
-  }, [departmentsQuery.data]);
+  const branches = normalizeApiList<Branch>(branchesQuery.data?.data);
+  const departments: Department[] = useMemo(
+    () => normalizeApiList<Department>(departmentsQuery.data?.data),
+    [departmentsQuery.data],
+  );
 
   const liveQuery = useQuery({
     queryKey: ["attendance-board-live", token, selectedDate, search],
