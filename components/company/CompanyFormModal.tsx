@@ -2,8 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
-import { useEffect, useMemo, useRef } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import type {
@@ -13,6 +13,7 @@ import type {
   CreateCompanyPayload,
   UpdateCompanyPayload,
 } from "@/lib/api/company";
+import { resolveApiAssetUrl } from "@/lib/api/employees/http";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 
@@ -96,6 +97,7 @@ export function CompanyFormModal({
     reset,
     setFocus,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<CompanyFormValues>({
     resolver: zodResolver(schema),
@@ -170,6 +172,30 @@ export function CompanyFormModal({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open, onClose]);
+
+  const logoFile = watch("logo");
+  const existingLogoUrl = useMemo(
+    () => resolveApiAssetUrl(initialData?.logo_url) ?? null,
+    [initialData?.logo_url],
+  );
+  const [uploadPreviewUrl, setUploadPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) {
+      setUploadPreviewUrl(null);
+      return;
+    }
+
+    if (logoFile instanceof File) {
+      const url = URL.createObjectURL(logoFile);
+      setUploadPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+
+    setUploadPreviewUrl(null);
+  }, [open, logoFile]);
+
+  const logoPreviewUrl = uploadPreviewUrl ?? (mode === "edit" ? existingLogoUrl : null);
 
   if (!open) return null;
 
@@ -264,9 +290,10 @@ export function CompanyFormModal({
                   <p className="mt-1 text-xs text-destructive">{fieldError("address")}</p>
                 ) : null}
               </div>
-              <div>
+              <div className="md:col-span-2">
                 <label className="text-sm font-medium">Logo Upload</label>
                 <Input
+                  accept="image/*"
                   className={inputStyles}
                   onChange={(event) => {
                     const file = event.target.files?.[0] ?? null;
@@ -274,6 +301,29 @@ export function CompanyFormModal({
                   }}
                   type="file"
                 />
+                <div className="mt-3 flex items-center gap-3">
+                  <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/30">
+                    {logoPreviewUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        alt="Company logo preview"
+                        className="h-full w-full object-contain"
+                        src={logoPreviewUrl}
+                      />
+                    ) : (
+                      <span className="px-2 text-center text-[11px] text-muted-foreground">
+                        No logo
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {uploadPreviewUrl
+                      ? "Preview of the selected logo."
+                      : existingLogoUrl
+                        ? "Current company logo."
+                        : "Upload a PNG or JPG to preview the logo here."}
+                  </p>
+                </div>
               </div>
               <div>
                 <label className="text-sm font-medium">Subscription Start Date</label>

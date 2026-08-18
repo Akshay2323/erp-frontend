@@ -8,6 +8,7 @@ export type PayrollRowPermissions = {
   canRecordPayment: boolean;
   canToggleOt: boolean;
   canHold: boolean;
+  /** Unpaid finalized (processed) runs can be unlocked back to draft. */
   canRevert: boolean;
   canExpandBreakdown: boolean;
 };

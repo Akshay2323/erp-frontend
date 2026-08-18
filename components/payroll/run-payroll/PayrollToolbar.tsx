@@ -4,13 +4,13 @@ import { memo } from "react";
 import {
   FileSpreadsheet,
   Lock,
+  RotateCcw,
   Save,
   Wallet,
   FileText,
   Building2,
   Send,
   History,
-  Undo2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -21,7 +21,8 @@ type PayrollToolbarProps = {
   onGenerate: () => void;
   onSave: () => void;
   onFinalize: () => void;
-  onRevert: () => void;
+  onRevertToDraft: () => void;
+  revertEligibleCount?: number;
   onRecordPayment: () => void;
   onDownloadSalarySheet: () => void;
   onDownloadBankFile: () => void;
@@ -38,7 +39,8 @@ export const PayrollToolbar = memo(function PayrollToolbar({
   onGenerate,
   onSave,
   onFinalize,
-  onRevert,
+  onRevertToDraft,
+  revertEligibleCount = 0,
   onRecordPayment,
   onDownloadSalarySheet,
   onDownloadBankFile,
@@ -62,9 +64,24 @@ export const PayrollToolbar = memo(function PayrollToolbar({
         <Lock className="mr-2 h-4 w-4" />
         Finalize Payroll
       </Button>
-      <Button size="sm" variant="outline" onClick={onRevert} disabled={busy || needsSelection}>
-        <Undo2 className="mr-2 h-4 w-4" />
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={onRevertToDraft}
+        disabled={busy || revertEligibleCount === 0}
+        title={
+          revertEligibleCount === 0
+            ? "Select finalized unpaid payroll runs to revert to draft"
+            : `Revert ${revertEligibleCount} finalized unpaid run(s) to draft`
+        }
+      >
+        <RotateCcw className="mr-2 h-4 w-4" />
         Revert to Draft
+        {revertEligibleCount > 0 ? (
+          <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+            {revertEligibleCount}
+          </span>
+        ) : null}
       </Button>
       <Button
         size="sm"

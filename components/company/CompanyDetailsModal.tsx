@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { useEffect } from "react";
 
 import type { Company } from "@/lib/api/company";
+import { resolveApiAssetUrl } from "@/lib/api/employees/http";
 import { Button } from "../ui/button";
 
 type CompanyDetailsModalProps = {
@@ -40,6 +41,8 @@ export function CompanyDetailsModal({ open, company, onClose }: CompanyDetailsMo
 
   if (!open || !company) return null;
 
+  const logoUrl = resolveApiAssetUrl(company.logo_url);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4"
@@ -56,6 +59,21 @@ export function CompanyDetailsModal({ open, company, onClose }: CompanyDetailsMo
           <Button aria-label="Close details" onClick={onClose} size="icon" variant="ghost">
             <X className="h-4 w-4" />
           </Button>
+        </div>
+        <div className="border-b border-border px-5 py-4">
+          <p className="mb-3 text-xs uppercase tracking-wide text-muted-foreground">Company Logo</p>
+          <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/30">
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                alt={`${company.company_name} logo`}
+                className="h-full w-full object-contain"
+                src={logoUrl}
+              />
+            ) : (
+              <span className="px-2 text-center text-xs text-muted-foreground">No logo uploaded</span>
+            )}
+          </div>
         </div>
         <div className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2">
           {detailItems(company).map((item) => (

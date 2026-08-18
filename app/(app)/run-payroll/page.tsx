@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ import {
   finalizePayrollRuns,
   revertPayrollRuns,
   postPayrollRunFlow,
+  revertPayrollRuns,
   savePayrollPayments,
   updatePayrollRunOtAllowed,
 } from "@/lib/api/payroll";
@@ -264,26 +265,22 @@ function RunPayrollContent() {
     }
   }, [token, selectedIds, payrollRows, filters.month, filters.year, refetchAfterMutation]);
 
-  const handleRevertPayroll = useCallback(async () => {
-    if (!token || selectedIds.length === 0) {
-      toast.error("Select at least one employee.");
+  const revertEligibleRows = useMemo(
+    () =>
+      payrollRows.filter(
+        (r) => selectedIds.includes(r.employeeId) && r.permissions.canRevert && r.payrollRunId,
+      ),
+    [payrollRows, selectedIds],
+  );
+
+  const handleRevertToDraft = useCallback(async () => {
+    if (!token) return;
+    if (revertEligibleRows.length === 0) {
+      toast.error("Select finalized unpaid payroll runs to revert.");
       return;
     }
 
-    const runIds = payrollRows
-      .filter(
-        (r) =>
-          selectedIds.includes(r.employeeId) &&
-          r.payrollRunId &&
-          r.payrollStatus === "finalized",
-      )
-      .map((r) => r.payrollRunId!);
-
-    if (runIds.length === 0) {
-      toast.error("Select finalized unpaid employees to revert to draft.");
-      return;
-    }
-
+    const runIds = revertEligibleRows.map((r) => r.payrollRunId!);
     setActionBusy(true);
     const toastId = toast.loading("Reverting payroll to draft…");
     try {
@@ -303,21 +300,24 @@ function RunPayrollContent() {
 
       if (revertedCount > 0) {
         toast.success(
-          `Payroll reverted to draft for ${revertedCount} employee${revertedCount === 1 ? "" : "s"}.` +
+          `Reverted ${revertedCount} payroll run${revertedCount === 1 ? "" : "s"} to draft.` +
             (skippedCount > 0 ? ` ${skippedCount} skipped.` : ""),
           { id: toastId },
         );
+        setSelectedIds([]);
+        await refetchAfterMutation();
       } else {
-        toast.error(firstError || "No payroll runs were reverted.", { id: toastId });
+        toast.error(
+          firstError || "No payroll runs were reverted. Paid runs cannot be unlocked.",
+          { id: toastId },
+        );
       }
-      setSelectedIds([]);
-      await refetchAfterMutation();
     } catch (err) {
-      toast.error(apiErrorMessage(err, "Unable to revert payroll."), { id: toastId });
+      toast.error(apiErrorMessage(err, "Unable to revert payroll to draft."), { id: toastId });
     } finally {
       setActionBusy(false);
     }
-  }, [token, selectedIds, payrollRows, filters.month, filters.year, refetchAfterMutation]);
+  }, [token, revertEligibleRows, filters.month, filters.year, refetchAfterMutation]);
 
   const confirmationCounts = (() => {
     void confirmationVersion;
@@ -698,10 +698,11 @@ function RunPayrollContent() {
               confirmationSentCount={confirmationCounts.sent}
               confirmationConfirmedCount={confirmationCounts.confirmed}
               busy={actionBusy}
+              revertEligibleCount={revertEligibleRows.length}
               onGenerate={() => handleGeneratePayroll(true)}
               onSave={handleSavePayroll}
               onFinalize={handleFinalizePayroll}
-              onRevert={handleRevertPayroll}
+              onRevertToDraft={() => void handleRevertToDraft()}
               onRecordPayment={() => setPaymentDrawerOpen(true)}
               onDownloadSalarySheet={handleDownloadSalarySheet}
               onDownloadBankFile={handleDownloadBankFile}
@@ -713,11 +714,12 @@ function RunPayrollContent() {
             <PayrollBulkActions
               selectedCount={selectedIds.length}
               disabled={actionBusy}
+              revertEligibleCount={revertEligibleRows.length}
               onEnableOt={() => handleBulkOt(true)}
               onDisableOt={() => handleBulkOt(false)}
               onGenerate={() => handleGeneratePayroll(true)}
               onFinalize={handleFinalizePayroll}
-              onRevert={handleRevertPayroll}
+              onRevertToDraft={() => void handleRevertToDraft()}
               onMarkPaid={handleMarkPaid}
             />
 

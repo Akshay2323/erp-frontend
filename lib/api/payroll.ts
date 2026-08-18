@@ -929,6 +929,37 @@ export async function bulkGeneratePayrollRuns(
   }
 }
 
+/** Unlock unpaid finalized (processed) payroll runs back to draft. */
+export async function revertPayrollRuns(
+  token: string,
+  payload: RevertPayrollPayload,
+): Promise<Envelope<Record<string, unknown>>> {
+  try {
+    const response = await fetch(`${API_BASE_URL}v1/payroll/runs/revert`, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        "X-CSRF-TOKEN": "",
+      },
+      body: JSON.stringify(payload),
+    });
+    const result = await parseResponse<Envelope<Record<string, unknown>>>(response);
+    if (!response.ok || !result.success) {
+      const fieldErrors =
+        typeof result.data === "object" && result.data && "errors" in result.data
+          ? (result.data.errors as Record<string, string[]> | undefined)
+          : undefined;
+      return fail(result.message || "Unable to revert payroll to draft.", fieldErrors);
+    }
+    return result;
+  } catch (error) {
+    if (isApiError(error)) return Promise.reject(error);
+    return fail("Unable to revert payroll to draft.");
+  }
+}
+
 export async function finalizePayrollRuns(
   token: string,
   payload: FinalizePayrollPayload,
@@ -956,36 +987,6 @@ export async function finalizePayrollRuns(
   } catch (error) {
     if (isApiError(error)) return Promise.reject(error);
     return fail("Unable to finalize payroll.");
-  }
-}
-
-export async function revertPayrollRuns(
-  token: string,
-  payload: RevertPayrollPayload,
-): Promise<Envelope<Record<string, unknown>>> {
-  try {
-    const response = await fetch(`${API_BASE_URL}v1/payroll/runs/revert`, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        "X-CSRF-TOKEN": "",
-      },
-      body: JSON.stringify(payload),
-    });
-    const result = await parseResponse<Envelope<Record<string, unknown>>>(response);
-    if (!response.ok || !result.success) {
-      const fieldErrors =
-        typeof result.data === "object" && result.data && "errors" in result.data
-          ? (result.data.errors as Record<string, string[]> | undefined)
-          : undefined;
-      return fail(result.message || "Unable to revert payroll.", fieldErrors);
-    }
-    return result;
-  } catch (error) {
-    if (isApiError(error)) return Promise.reject(error);
-    return fail("Unable to revert payroll.");
   }
 }
 

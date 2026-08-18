@@ -13,6 +13,7 @@ import {
   Users,
   CircleDot,
   Loader2,
+  RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ import {
   VerifySalaryEditDrawer,
   type VerifySalaryEditTarget,
 } from "@/components/payroll/run-payroll/VerifySalaryEditDrawer";
-import { finalizePayrollRuns, revertPayrollRuns, postPayrollRunFlow, type PayrollApiError } from "@/lib/api/payroll";
+import { finalizePayrollRuns, postPayrollRunFlow, revertPayrollRuns, type PayrollApiError } from "@/lib/api/payroll";
 import {
   readPayrollVerifyContext,
   type PayrollVerifyContext,
@@ -87,6 +88,15 @@ function staffBreakMinutes(staff: StaffRow): number {
   return num(attendance.total_break_minutes ?? staff.total_break_minutes);
 }
 
+/** Finalized unpaid runs can be unlocked back to draft. */
+function staffCanRevert(staff: StaffRow): boolean {
+  const payrollRunId = Number(staff.payroll_run_id);
+  if (!Number.isFinite(payrollRunId) || payrollRunId <= 0) return false;
+  const status = String(staff.payroll_status ?? "").toLowerCase();
+  if (status !== "processed") return false;
+  return staffPaid(staff) <= 0;
+}
+
 export default function VerifySalaryPage() {
   const token = useAuthToken();
   const router = useRouter();
@@ -96,6 +106,7 @@ export default function VerifySalaryPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [editTarget, setEditTarget] = useState<VerifySalaryEditTarget | null>(null);
   const [finalizing, setFinalizing] = useState(false);
+  const [reverting, setReverting] = useState(false);
 
   useEffect(() => {
     const stored = readPayrollVerifyContext();
@@ -177,6 +188,11 @@ export default function VerifySalaryPage() {
     }
     return list;
   }, [data, selectedIds]);
+
+  const revertEligibleStaff = useMemo(
+    () => selectedStaffForFinalize.filter(staffCanRevert),
+    [selectedStaffForFinalize],
+  );
 
   const totals = useMemo(() => {
     let payable = 0;
@@ -324,27 +340,21 @@ export default function VerifySalaryPage() {
     queryClient,
   ]);
 
-  const handleRevertPayroll = useCallback(async () => {
+  const handleRevertToDraft = useCallback(async () => {
     if (!token) {
       toast.error("Please sign in to continue.");
       return;
     }
-    if (selectedIds.length === 0) {
-      toast.error("No employees selected to revert.");
+    if (revertEligibleStaff.length === 0) {
+      toast.error("No finalized unpaid payroll runs to revert.");
       return;
     }
 
-    const payrollRunIds = selectedStaffForFinalize
-      .filter((staff) => String(staff.payroll_status ?? "") === "processed")
+    const payrollRunIds = revertEligibleStaff
       .map((staff) => Number(staff.payroll_run_id))
       .filter((id) => Number.isFinite(id) && id > 0);
 
-    if (payrollRunIds.length === 0) {
-      toast.error("Select finalized unpaid employees to revert to draft.");
-      return;
-    }
-
-    setFinalizing(true);
+    setReverting(true);
     const toastId = toast.loading("Reverting payroll to draft…");
     try {
       const result = await revertPayrollRuns(token, {
@@ -364,26 +374,28 @@ export default function VerifySalaryPage() {
 
       if (revertedCount > 0) {
         toast.success(
-          `Payroll reverted to draft for ${revertedCount} employee${revertedCount === 1 ? "" : "s"}.` +
+          `Reverted ${revertedCount} payroll run${revertedCount === 1 ? "" : "s"} to draft.` +
             (skippedCount > 0 ? ` ${skippedCount} skipped.` : ""),
           { id: toastId },
         );
+        await queryClient.invalidateQueries({ queryKey: ["payroll-run-flow", 2] });
+        await queryClient.invalidateQueries({ queryKey: ["run-payroll"] });
       } else {
-        toast.error(firstError || "No payroll runs were reverted.", { id: toastId });
+        toast.error(
+          firstError || "No payroll runs were reverted. Paid runs cannot be unlocked.",
+          { id: toastId },
+        );
       }
-
-      await queryClient.invalidateQueries({ queryKey: ["payroll-run-flow", 2] });
-      await queryClient.invalidateQueries({ queryKey: ["run-payroll"] });
     } catch (err) {
       const message =
         typeof err === "object" && err !== null && "message" in err
           ? String((err as PayrollApiError).message)
-          : "Unable to revert payroll.";
+          : "Unable to revert payroll to draft.";
       toast.error(message, { id: toastId });
     } finally {
-      setFinalizing(false);
+      setReverting(false);
     }
-  }, [token, selectedIds, selectedStaffForFinalize, initialMonth, initialYear, queryClient]);
+  }, [token, revertEligibleStaff, initialMonth, initialYear, selectedIds, queryClient]);
 
   if (!contextReady) {
     return <PayrollPageSkeleton />;
@@ -654,26 +666,42 @@ export default function VerifySalaryPage() {
           </div>
           <div className={cn("flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto")}>
             <Link href="/run-payroll">
-              <Button variant="outline" disabled={finalizing}>
+              <Button variant="outline" disabled={finalizing || reverting}>
                 Cancel
               </Button>
             </Link>
             <Button
               variant="outline"
-              disabled={finalizing}
+              disabled={finalizing || reverting || revertEligibleStaff.length === 0}
+              onClick={() => void handleRevertToDraft()}
+              title={
+                revertEligibleStaff.length === 0
+                  ? "Only finalized unpaid payroll can be reverted"
+                  : `Revert ${revertEligibleStaff.length} run(s) to draft`
+              }
+            >
+              {reverting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Reverting…
+                </>
+              ) : (
+                <>
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Revert to Draft
+                  {revertEligibleStaff.length > 0 ? ` (${revertEligibleStaff.length})` : ""}
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              disabled={finalizing || reverting}
               onClick={() => router.push("/run-payroll")}
             >
               Finalize Calculation
             </Button>
             <Button
-              variant="outline"
-              disabled={finalizing || staffList.length === 0}
-              onClick={() => void handleRevertPayroll()}
-            >
-              Revert to Draft
-            </Button>
-            <Button
-              disabled={finalizing || staffList.length === 0}
+              disabled={finalizing || reverting || staffList.length === 0}
               onClick={() => void handleFinalizePayroll()}
             >
               {finalizing ? (

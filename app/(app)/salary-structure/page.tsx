@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TableRowsSkeleton } from "@/components/ui/page-states";
+import { getEmployees } from "@/lib/api/employees";
+import { getPayrollWorkspace } from "@/lib/api/payroll";
 import { API_BASE_URL } from "@/lib/config";
 import { useAuthToken } from "@/lib/use-auth-token";
 
@@ -33,6 +35,25 @@ function normalizeListData(data: unknown): any[] {
   return [];
 }
 
+async function fetchAllEmployees(token: string) {
+  const all: any[] = [];
+  let page = 1;
+  let lastPage = 1;
+  do {
+    const res = await getEmployees(token, { page, per_page: 100 });
+    const data = res.data;
+    const items = Array.isArray(data)
+      ? data
+      : data && typeof data === "object" && Array.isArray((data as { items?: unknown }).items)
+        ? (data as { items: any[] }).items
+        : [];
+    all.push(...items);
+    lastPage = res.meta?.last_page ?? 1;
+    page += 1;
+  } while (page <= lastPage && page < 500);
+  return all;
+}
+
 function SalaryStructureTab() {
   const token = useAuthToken();
   const [data, setData] = useState<any[]>([]);
@@ -53,6 +74,7 @@ function SalaryStructureTab() {
   const [saving, setSaving] = useState(false);
   const [employees, setEmployees] = useState<any[]>([]);
   const [components, setComponents] = useState<any[]>([]);
+  const [filterOptions, setFilterOptions] = useState<{ companies?: Array<{ id: number; name: string }> }>({});
 
   // Filters
   const [statusFilter, setStatusFilter] = useState("all");
@@ -70,7 +92,12 @@ function SalaryStructureTab() {
     return matchesStatus && matchesCompany;
   });
 
-  const uniqueCompanies = Array.from(new Map(employees.filter(e => e.company).map(e => [e.company.id, e.company])).values());
+  const companiesFromEmployees = Array.from(
+    new Map(employees.filter((e) => e.company).map((e) => [e.company.id, e.company])).values(),
+  );
+  const companies =
+    filterOptions.companies?.length ? filterOptions.companies : companiesFromEmployees;
+  const showAllCompaniesOption = companies.length > 1;
 
   const fetchData = async () => {
     if (!token) {
@@ -79,23 +106,37 @@ function SalaryStructureTab() {
     }
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}v1/payroll/salary-structures`, {
-        headers: authHeaders(token),
-      });
-      const json = await res.json();
+      const [structuresRes, staffList, compRes, workspaceRes] = await Promise.all([
+        fetch(`${API_BASE_URL}v1/payroll/salary-structures`, {
+          headers: authHeaders(token),
+        }),
+        fetchAllEmployees(token),
+        fetch(`${API_BASE_URL}v1/payroll/components`, {
+          headers: authHeaders(token),
+        }),
+        getPayrollWorkspace(token, { screen: "summary" }),
+      ]);
+
+      const json = await structuresRes.json();
       if (json.success) setData(normalizeListData(json.data));
 
-      const staffRes = await fetch(`${API_BASE_URL}v1/employees?per_page=100`, {
-        headers: authHeaders(token),
-      });
-      const staffJson = await staffRes.json();
-      if (staffJson.success) setEmployees(staffJson.data.items || []);
+      setEmployees(staffList);
 
-      const compRes = await fetch(`${API_BASE_URL}v1/payroll/components`, {
-        headers: authHeaders(token),
-      });
       const compJson = await compRes.json();
       if (compJson.success) setComponents(normalizeListData(compJson.data));
+
+      const workspaceData = workspaceRes.data as { filter_options?: { companies?: Array<{ id: number; name: string }> } };
+      const nextFilterOptions = workspaceData.filter_options ?? {};
+      setFilterOptions(nextFilterOptions);
+
+      const nextCompanies = nextFilterOptions.companies?.length
+        ? nextFilterOptions.companies
+        : Array.from(
+            new Map(staffList.filter((e) => e.company).map((e) => [e.company.id, e.company])).values(),
+          );
+      if (nextCompanies.length === 1) {
+        setCompanyFilter(String(nextCompanies[0].id));
+      }
     } catch (error) {
       console.error("Failed to fetch salary structures:", error);
     } finally {
@@ -233,8 +274,8 @@ function SalaryStructureTab() {
                 onChange={(e) => setCompanyFilter(e.target.value)}
                 className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
               >
-                <option value="all">All Companies</option>
-                {uniqueCompanies.map((c: any) => (
+                {showAllCompaniesOption ? <option value="all">All Companies</option> : null}
+                {companies.map((c: any) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
@@ -370,7 +411,7 @@ function SalaryStructureTab() {
                     className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                   >
                     <option value="" disabled>Select Company</option>
-                    {uniqueCompanies.map((c: any) => (
+                    {companies.map((c: any) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                   </select>
