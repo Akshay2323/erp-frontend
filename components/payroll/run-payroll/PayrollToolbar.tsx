@@ -10,6 +10,7 @@ import {
   Building2,
   Send,
   History,
+  Undo2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -20,6 +21,7 @@ type PayrollToolbarProps = {
   onGenerate: () => void;
   onSave: () => void;
   onFinalize: () => void;
+  onRevert: () => void;
   onRecordPayment: () => void;
   onDownloadSalarySheet: () => void;
   onDownloadBankFile: () => void;
@@ -36,6 +38,7 @@ export const PayrollToolbar = memo(function PayrollToolbar({
   onGenerate,
   onSave,
   onFinalize,
+  onRevert,
   onRecordPayment,
   onDownloadSalarySheet,
   onDownloadBankFile,
@@ -58,6 +61,10 @@ export const PayrollToolbar = memo(function PayrollToolbar({
       <Button size="sm" variant="outline" onClick={onFinalize} disabled={busy || needsSelection}>
         <Lock className="mr-2 h-4 w-4" />
         Finalize Payroll
+      </Button>
+      <Button size="sm" variant="outline" onClick={onRevert} disabled={busy || needsSelection}>
+        <Undo2 className="mr-2 h-4 w-4" />
+        Revert to Draft
       </Button>
       <Button
         size="sm"

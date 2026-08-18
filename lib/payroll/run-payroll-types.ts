@@ -8,6 +8,7 @@ export type PayrollRowPermissions = {
   canRecordPayment: boolean;
   canToggleOt: boolean;
   canHold: boolean;
+  canRevert: boolean;
   canExpandBreakdown: boolean;
 };
 

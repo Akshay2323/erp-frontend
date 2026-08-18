@@ -7,6 +7,7 @@ type PayrollBulkActionsProps = {
   onDisableOt: () => void;
   onGenerate: () => void;
   onFinalize: () => void;
+  onRevert: () => void;
   onMarkPaid: () => void;
   disabled?: boolean;
 };
@@ -17,6 +18,7 @@ export const PayrollBulkActions = memo(function PayrollBulkActions({
   onDisableOt,
   onGenerate,
   onFinalize,
+  onRevert,
   onMarkPaid,
   disabled,
 }: PayrollBulkActionsProps) {
@@ -36,6 +38,9 @@ export const PayrollBulkActions = memo(function PayrollBulkActions({
       </Button>
       <Button size="sm" variant="outline" disabled={disabled} onClick={onFinalize}>
         Finalize Payroll
+      </Button>
+      <Button size="sm" variant="outline" disabled={disabled} onClick={onRevert}>
+        Revert to Draft
       </Button>
       <Button size="sm" variant="outline" disabled={disabled} onClick={onMarkPaid}>
         Mark Paid

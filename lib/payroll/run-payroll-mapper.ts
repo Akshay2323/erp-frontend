@@ -32,6 +32,7 @@ function mapPermissions(raw: Record<string, unknown> | undefined): PayrollRowPer
     canRecordPayment: Boolean(p.can_record_payment),
     canToggleOt: Boolean(p.can_toggle_ot),
     canHold: Boolean(p.can_hold),
+    canRevert: Boolean(p.can_revert),
     canExpandBreakdown: p.can_expand_breakdown !== false,
   };
 }

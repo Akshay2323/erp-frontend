@@ -23,7 +23,7 @@ import {
   VerifySalaryEditDrawer,
   type VerifySalaryEditTarget,
 } from "@/components/payroll/run-payroll/VerifySalaryEditDrawer";
-import { finalizePayrollRuns, postPayrollRunFlow, type PayrollApiError } from "@/lib/api/payroll";
+import { finalizePayrollRuns, revertPayrollRuns, postPayrollRunFlow, type PayrollApiError } from "@/lib/api/payroll";
 import {
   readPayrollVerifyContext,
   type PayrollVerifyContext,
@@ -324,6 +324,67 @@ export default function VerifySalaryPage() {
     queryClient,
   ]);
 
+  const handleRevertPayroll = useCallback(async () => {
+    if (!token) {
+      toast.error("Please sign in to continue.");
+      return;
+    }
+    if (selectedIds.length === 0) {
+      toast.error("No employees selected to revert.");
+      return;
+    }
+
+    const payrollRunIds = selectedStaffForFinalize
+      .filter((staff) => String(staff.payroll_status ?? "") === "processed")
+      .map((staff) => Number(staff.payroll_run_id))
+      .filter((id) => Number.isFinite(id) && id > 0);
+
+    if (payrollRunIds.length === 0) {
+      toast.error("Select finalized unpaid employees to revert to draft.");
+      return;
+    }
+
+    setFinalizing(true);
+    const toastId = toast.loading("Reverting payroll to draft…");
+    try {
+      const result = await revertPayrollRuns(token, {
+        month: initialMonth,
+        year: initialYear,
+        payroll_run_ids: payrollRunIds,
+        employee_ids: selectedIds,
+      });
+      const payload = (result.data ?? {}) as {
+        reverted_count?: number;
+        skipped_count?: number;
+        errors?: Array<{ message?: string }>;
+      };
+      const revertedCount = Number(payload.reverted_count ?? 0);
+      const skippedCount = Number(payload.skipped_count ?? 0);
+      const firstError = payload.errors?.[0]?.message;
+
+      if (revertedCount > 0) {
+        toast.success(
+          `Payroll reverted to draft for ${revertedCount} employee${revertedCount === 1 ? "" : "s"}.` +
+            (skippedCount > 0 ? ` ${skippedCount} skipped.` : ""),
+          { id: toastId },
+        );
+      } else {
+        toast.error(firstError || "No payroll runs were reverted.", { id: toastId });
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ["payroll-run-flow", 2] });
+      await queryClient.invalidateQueries({ queryKey: ["run-payroll"] });
+    } catch (err) {
+      const message =
+        typeof err === "object" && err !== null && "message" in err
+          ? String((err as PayrollApiError).message)
+          : "Unable to revert payroll.";
+      toast.error(message, { id: toastId });
+    } finally {
+      setFinalizing(false);
+    }
+  }, [token, selectedIds, selectedStaffForFinalize, initialMonth, initialYear, queryClient]);
+
   if (!contextReady) {
     return <PayrollPageSkeleton />;
   }
@@ -603,6 +664,13 @@ export default function VerifySalaryPage() {
               onClick={() => router.push("/run-payroll")}
             >
               Finalize Calculation
+            </Button>
+            <Button
+              variant="outline"
+              disabled={finalizing || staffList.length === 0}
+              onClick={() => void handleRevertPayroll()}
+            >
+              Revert to Draft
             </Button>
             <Button
               disabled={finalizing || staffList.length === 0}

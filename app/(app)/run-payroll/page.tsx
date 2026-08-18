@@ -20,6 +20,7 @@ import {
   exportPayrollBankFile,
   exportPayrollRuns,
   finalizePayrollRuns,
+  revertPayrollRuns,
   postPayrollRunFlow,
   savePayrollPayments,
   updatePayrollRunOtAllowed,
@@ -258,6 +259,61 @@ function RunPayrollContent() {
       await refetchAfterMutation();
     } catch (err) {
       toast.error(apiErrorMessage(err, "Unable to finalize payroll."), { id: toastId });
+    } finally {
+      setActionBusy(false);
+    }
+  }, [token, selectedIds, payrollRows, filters.month, filters.year, refetchAfterMutation]);
+
+  const handleRevertPayroll = useCallback(async () => {
+    if (!token || selectedIds.length === 0) {
+      toast.error("Select at least one employee.");
+      return;
+    }
+
+    const runIds = payrollRows
+      .filter(
+        (r) =>
+          selectedIds.includes(r.employeeId) &&
+          r.payrollRunId &&
+          r.payrollStatus === "finalized",
+      )
+      .map((r) => r.payrollRunId!);
+
+    if (runIds.length === 0) {
+      toast.error("Select finalized unpaid employees to revert to draft.");
+      return;
+    }
+
+    setActionBusy(true);
+    const toastId = toast.loading("Reverting payroll to draft…");
+    try {
+      const result = await revertPayrollRuns(token, {
+        month: filters.month,
+        year: filters.year,
+        payroll_run_ids: runIds,
+      });
+      const payload = (result.data ?? {}) as {
+        reverted_count?: number;
+        skipped_count?: number;
+        errors?: Array<{ message?: string }>;
+      };
+      const revertedCount = Number(payload.reverted_count ?? 0);
+      const skippedCount = Number(payload.skipped_count ?? 0);
+      const firstError = payload.errors?.[0]?.message;
+
+      if (revertedCount > 0) {
+        toast.success(
+          `Payroll reverted to draft for ${revertedCount} employee${revertedCount === 1 ? "" : "s"}.` +
+            (skippedCount > 0 ? ` ${skippedCount} skipped.` : ""),
+          { id: toastId },
+        );
+      } else {
+        toast.error(firstError || "No payroll runs were reverted.", { id: toastId });
+      }
+      setSelectedIds([]);
+      await refetchAfterMutation();
+    } catch (err) {
+      toast.error(apiErrorMessage(err, "Unable to revert payroll."), { id: toastId });
     } finally {
       setActionBusy(false);
     }
@@ -645,6 +701,7 @@ function RunPayrollContent() {
               onGenerate={() => handleGeneratePayroll(true)}
               onSave={handleSavePayroll}
               onFinalize={handleFinalizePayroll}
+              onRevert={handleRevertPayroll}
               onRecordPayment={() => setPaymentDrawerOpen(true)}
               onDownloadSalarySheet={handleDownloadSalarySheet}
               onDownloadBankFile={handleDownloadBankFile}
@@ -660,6 +717,7 @@ function RunPayrollContent() {
               onDisableOt={() => handleBulkOt(false)}
               onGenerate={() => handleGeneratePayroll(true)}
               onFinalize={handleFinalizePayroll}
+              onRevert={handleRevertPayroll}
               onMarkPaid={handleMarkPaid}
             />
 
